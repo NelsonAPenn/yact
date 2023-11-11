@@ -1,4 +1,4 @@
-use git2::{Repository};
+use git2::{Repository, build::TreeUpdateBuilder};
 pub use transformer::{Transformer, transform};
 
 pub mod transformer
@@ -66,26 +66,46 @@ impl From<String> for Error
 pub fn pre_commit() -> Result<(), git2::Error>
 {
     let repository = Repository::discover(".")?;
-    let index = repository.index()?;
-    let tree = repository.head()?.peel_to_tree()?;
-    let mut diff = repository.diff_tree_to_index(Some(&tree), Some(&index), None)?;
+    let mut index = repository.index()?;
+    let index_tree_id = index.write_tree()?;
+    let index_tree = repository.find_tree(index_tree_id)?;
+    eprintln!("Created tree {:?} from index", index_tree);
+    let last_committed_tree = repository.head()?.peel_to_tree()?;
+    eprintln!("Calculating staged diff...");
+    let mut diff = repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&index_tree), None)?;
     diff.find_similar(None);
+    eprintln!("Transforming files...");
+    let mut transformed_tree_builder = TreeUpdateBuilder::new();
 
     for entry in diff.deltas()
     {
-        println!("{:?}", entry);
         if !entry.new_file().is_binary()
         {
-            transform(
+            eprintln!("Transforming entry {:?}", entry);
+            let oid = transform(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
                 transformer::transformers::trailing_whitespace
             ).unwrap();
+            transformed_tree_builder.upsert(
+                entry.new_file().path_bytes().unwrap(),
+                oid,
+                entry.new_file().mode(),
+            );
 
         }
-        // println!("{:?}", str::from_utf8(entry.path.as_slice()));
-
     }
+
+    let transformed_tree_id = transformed_tree_builder.create_updated(
+        &repository,
+        &index_tree,
+    )?;
+    let transformed_tree = repository.find_tree(transformed_tree_id)?;
+    eprintln!("Created transformed tree {:?}...", transformed_tree);
+    index.read_tree(&transformed_tree)?;
+
+    eprintln!("Updated index to new tree!");
+    index.write()?;
     todo!()
 }
 
