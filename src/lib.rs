@@ -1,4 +1,4 @@
-use git2::{Repository, build::TreeUpdateBuilder};
+use git2::{Repository, build::{TreeUpdateBuilder, CheckoutBuilder}, DiffOptions, ApplyLocation};
 pub use transformer::{Transformer, transform};
 
 pub mod transformer
@@ -32,6 +32,7 @@ pub mod transformer
             for line in str_data.lines()
             {
                 out.push_str(line.trim_end());
+                out.push('\n');
             }
             Ok(out.into_bytes())
         }
@@ -66,6 +67,7 @@ impl From<String> for Error
 pub fn pre_commit() -> Result<(), git2::Error>
 {
     let repository = Repository::discover(".")?;
+    println!("{:#?}", repository.worktrees()?.iter().collect::<Vec<_>>());
     let mut index = repository.index()?;
     let index_tree_id = index.write_tree()?;
     let index_tree = repository.find_tree(index_tree_id)?;
@@ -73,7 +75,7 @@ pub fn pre_commit() -> Result<(), git2::Error>
     let last_committed_tree = repository.head()?.peel_to_tree()?;
     eprintln!("Calculating staged diff...");
     let mut diff = repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&index_tree), None)?;
-    diff.find_similar(None);
+    diff.find_similar(None)?;
     eprintln!("Transforming files...");
     let mut transformed_tree_builder = TreeUpdateBuilder::new();
 
@@ -103,10 +105,37 @@ pub fn pre_commit() -> Result<(), git2::Error>
     let transformed_tree = repository.find_tree(transformed_tree_id)?;
     eprintln!("Created transformed tree {:?}...", transformed_tree);
     index.read_tree(&transformed_tree)?;
-
-    eprintln!("Updated index to new tree!");
     index.write()?;
-    todo!()
+    eprintln!("Updated index to new tree!");
+    let mut workdir_diff = repository.diff_tree_to_workdir(
+        Some(&index_tree),
+        None,
+    )?;
+    println!("staged changes: {:?}", workdir_diff.stats());
+    workdir_diff.merge(&repository.diff_tree_to_tree(
+        Some(&index_tree),
+        Some(&transformed_tree),
+        None,
+    )?)?;
+    println!("with transformations: {:?}", workdir_diff.stats());
+    let mut new_dirty_index = repository.apply_to_tree(
+        &index_tree,
+        &workdir_diff,
+        None
+    )?;
+    repository.checkout_index(
+        Some(&mut new_dirty_index),
+        Some(&mut CheckoutBuilder::new()
+             .safe()
+             .update_only(true)
+             .use_ours(true)
+             .allow_conflicts(true)
+             .conflict_style_merge(true)
+         ),
+    )?;
+
+    eprintln!("updated workdir with changes");
+    Ok(())
 }
 
 #[cfg(test)]

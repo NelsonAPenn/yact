@@ -11,9 +11,11 @@ Yet another commit transformer, and the forbidden fruit of your development proc
 
 ## Considerations
 
-`yact` is focused on: 
+`yact` is focused on (in order): 
 
-- Doing a really good job linting automatically with minimal disturbance to your workflow (better than other solutions)
+1. Doing a really good job linting automatically with minimal disturbance to your workflow (better than other solutions)
+2. Correctness. Working with git objects right.
+3. Effectiveness / efficiency
 
 It is not focused on:
 
