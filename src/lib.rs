@@ -2,10 +2,14 @@ use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
     ApplyLocation, DiffOptions, Repository,
 };
+use std::borrow::Cow;
+use std::collections::HashMap;
 pub use transformer::{transform, Transformer};
 
 pub mod transformer {
     use git2::{Blob, Oid, Repository};
+    use std::io::Write;
+    use std::process::Stdio;
 
     /// A generic trait for transforming staged files.
     ///
@@ -28,10 +32,34 @@ pub mod transformer {
         Ok(repository.blob(transformed.as_slice())?)
     }
 
+    /// create a shell transformer from a command with process and arguments
+    /// configured.
+    pub fn create_shell_transformer<T: Fn() -> std::process::Command>(
+        command_getter: T,
+    ) -> impl Transformer {
+        move |data: &[u8]| {
+            let mut child = command_getter()
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .map_err(|_| "shell transformer failed")?;
+            let mut stdin = child.stdin.take().ok_or("failed to get stdin")?;
+            let clone = data.iter().copied().collect::<Vec<u8>>();
+            std::thread::spawn(move || {
+                stdin
+                    .write_all(clone.as_slice())
+                    .expect("Failed to write to stream");
+            });
+            let stdout = child
+                .wait_with_output()
+                .map_err(|_| "Failed to read stdout")?
+                .stdout;
+            Ok(stdout)
+        }
+    }
+
     pub mod transformers {
         use super::Transformer;
-        use std::io::Write;
-        use std::process::Stdio;
 
         pub fn trailing_whitespace(data: &[u8]) -> Result<Vec<u8>, String> {
             let str_data = std::str::from_utf8(data).map_err(|err| format!("{:?}", err))?;
@@ -41,28 +69,6 @@ pub mod transformer {
                 out.push('\n');
             }
             Ok(out.into_bytes())
-        }
-
-        pub fn shell<T: Fn() -> std::process::Command>(command_getter: T) -> impl Transformer {
-            move |data: &[u8]| {
-                let mut child = command_getter()
-                    .stdin(Stdio::piped())
-                    .stdout(Stdio::piped())
-                    .spawn()
-                    .map_err(|_| "shell transformer failed")?;
-                let mut stdin = child.stdin.take().ok_or("failed to get stdin")?;
-                let clone = data.iter().copied().collect::<Vec<u8>>();
-                std::thread::spawn(move || {
-                    stdin
-                        .write_all(clone.as_slice())
-                        .expect("Failed to write to stream");
-                });
-                let stdout = child
-                    .wait_with_output()
-                    .map_err(|_| "Failed to read stdout")?
-                    .stdout;
-                Ok(stdout)
-            }
         }
     }
 }
@@ -104,7 +110,7 @@ pub fn pre_commit() -> Result<(), git2::Error> {
             let oid = transform(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
-                transformer::transformers::shell(|| {
+                transformer::create_shell_transformer(|| {
                     let mut command = std::process::Command::new("rustfmt");
                     command.args(&["--emit", "stdout"]);
                     command
@@ -126,6 +132,22 @@ pub fn pre_commit() -> Result<(), git2::Error> {
     index.write()?;
     Ok(())
 }
+
+pub enum BaseTransformer {
+    TrailingWhitespace,
+    Rustfmt,
+    Prettier,
+    PyIsort,
+    PyBlack,
+}
+pub enum BuiltinTransformer {
+    Base(BaseTransformer),
+    Node(BaseTransformer),
+    Yarn(BaseTransformer),
+    Poetry(BaseTransformer),
+}
+
+pub type Configuration<'a> = HashMap<Cow<'a, str>, Vec<BuiltinTransformer>>;
 
 #[cfg(test)]
 mod tests {
