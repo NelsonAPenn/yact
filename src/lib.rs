@@ -2,9 +2,10 @@ use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
     ApplyLocation, DiffOptions, Repository,
 };
+use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
-pub use transformer::{transform, Transformer};
+pub use transformer::{create_shell_transformer, transform, Transformer};
 
 pub mod transformer {
     use git2::{Blob, Oid, Repository};
@@ -106,7 +107,7 @@ pub fn pre_commit() -> Result<(), git2::Error> {
 
     for entry in diff.deltas() {
         if !entry.new_file().is_binary() {
-            eprintln!("Transforming entry {:?}", entry.new_file().path());
+            eprintln!("Transforming entry {:?}", entry.new_file().path().unwrap());
             let oid = transform(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
@@ -133,6 +134,7 @@ pub fn pre_commit() -> Result<(), git2::Error> {
     Ok(())
 }
 
+#[derive(Debug, Deserialize)]
 pub enum BaseTransformer {
     TrailingWhitespace,
     Rustfmt,
@@ -140,6 +142,8 @@ pub enum BaseTransformer {
     PyIsort,
     PyBlack,
 }
+
+#[derive(Debug, Deserialize)]
 pub enum BuiltinTransformer {
     Base(BaseTransformer),
     Node(BaseTransformer),
@@ -148,13 +152,3 @@ pub enum BuiltinTransformer {
 }
 
 pub type Configuration<'a> = HashMap<Cow<'a, str>, Vec<BuiltinTransformer>>;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        pre_commit();
-    }
-}
