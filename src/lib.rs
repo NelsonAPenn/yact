@@ -29,9 +29,9 @@ pub mod transformer {
     }
 
     pub mod transformers {
+        use super::Transformer;
         use std::io::Write;
         use std::process::Stdio;
-        use super::Transformer;
 
         pub fn trailing_whitespace(data: &[u8]) -> Result<Vec<u8>, String> {
             let str_data = std::str::from_utf8(data).map_err(|err| format!("{:?}", err))?;
@@ -107,9 +107,9 @@ pub fn pre_commit() -> Result<(), git2::Error> {
                 &repository.find_blob(entry.new_file().id())?,
                 transformer::transformers::shell(|| {
                     let mut command = std::process::Command::new("rustfmt");
-                    command.args(&["emit", "stdout"]);
+                    command.args(&["--emit", "stdout"]);
                     command
-                })
+                }),
             )
             .unwrap();
             transformed_tree_builder.upsert(
