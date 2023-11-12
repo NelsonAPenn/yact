@@ -2,10 +2,10 @@ use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
     ApplyLocation, DiffOptions, Repository,
 };
-use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
-pub use transformer::{create_shell_transformer, transform, Transformer};
+use serde::{Deserialize};
+pub use transformer::{transform, Transformer, create_shell_transformer};
 
 pub mod transformer {
     use git2::{Blob, Oid, Repository};
@@ -152,3 +152,5 @@ pub enum BuiltinTransformer {
 }
 
 pub type Configuration<'a> = HashMap<Cow<'a, str>, Vec<BuiltinTransformer>>;
+
+
