@@ -106,7 +106,7 @@ pub fn pre_commit() -> Result<(), git2::Error> {
 
     for entry in diff.deltas() {
         if !entry.new_file().is_binary() {
-            eprintln!("Transforming entry {:?}", entry);
+            eprintln!("Transforming entry {:?}", entry.new_file().path());
             let oid = transform(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
