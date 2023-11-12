@@ -55,13 +55,12 @@ pub mod transformer {
                 std::thread::spawn(move || {
                     stdin
                         .write_all(clone.as_slice())
-                        .map_err(|_| "Failed to write to stream");
+                        .expect("Failed to write to stream");
                 });
                 let stdout = child
                     .wait_with_output()
                     .map_err(|_| "Failed to read stdout")?
                     .stdout;
-                println!("{:?}", std::str::from_utf8(&stdout));
                 Ok(stdout)
             }
         }
@@ -86,7 +85,7 @@ impl From<String> for Error {
 }
 
 pub fn pre_commit() -> Result<(), git2::Error> {
-    let mut repository = Repository::discover(".")?;
+    let repository = Repository::discover(".")?;
     let mut index = repository.index()?;
     let index_tree_id = index.write_tree()?;
     let index_tree = repository.find_tree(index_tree_id)?;
