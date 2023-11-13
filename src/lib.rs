@@ -33,6 +33,22 @@ pub mod transformer {
         Ok(repository.blob(transformed.as_slice())?)
     }
 
+    /// Apply many transform to an existing blob, creating another (for example,
+    /// applying linting)
+    pub fn transforme(
+        repository: &Repository,
+        blob: &Blob,
+        transformers: &Vec<Box<dyn Transformer>>,
+    ) -> Result<Oid, crate::Error> {
+        let mut transformer_iter = transformers.iter();
+        let mut transformed = transformer_iter.next().expect("at least one item")(blob.content())?;
+        for transformer in transformer_iter {
+            transformed = transformer(transformed.as_slice())?;
+        }
+
+        Ok(repository.blob(transformed.as_slice())?)
+    }
+
     /// create a shell transformer from a command with process and arguments
     /// configured.
     pub fn create_shell_transformer<T: Fn() -> std::process::Command>(
@@ -107,25 +123,26 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
 
     for entry in diff.deltas() {
         if !entry.new_file().is_binary() {
-            for pathspec in configuration.keys() {
-                println!(
-                    "Pathspec {} matches?: {}",
-                    pathspec,
-                    Pathspec::new([pathspec]).unwrap().matches_path(
-                        entry.new_file().path().unwrap(),
-                        git2::PathspecFlags::DEFAULT
-                    )
-                );
+            let matching_pathspec = configuration.keys().find(|pathspec| {
+                Pathspec::new([pathspec]).unwrap().matches_path(
+                    entry.new_file().path().unwrap(),
+                    git2::PathspecFlags::DEFAULT,
+                )
+            });
+            if matching_pathspec.is_none() {
+                continue;
             }
+            let matching_pathspec = matching_pathspec.unwrap();
+            let transformers = configuration[matching_pathspec]
+                .iter()
+                .map(|x| x.transformer())
+                .collect();
+
             eprintln!("Transforming entry {:?}", entry.new_file().path().unwrap());
-            let oid = transform(
+            let oid = transformer::transforme(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
-                transformer::create_shell_transformer(|| {
-                    let mut command = std::process::Command::new("rustfmt");
-                    command.args(&["--emit", "stdout"]);
-                    command
-                }),
+                &transformers,
             )
             .unwrap();
             transformed_tree_builder.upsert(
@@ -149,7 +166,7 @@ pub enum BuiltinTransformer {
     TrailingWhitespace,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub enum ShellCommandTransformer {
     Rustfmt,
     Prettier,
@@ -186,6 +203,51 @@ pub enum TransformerOptions {
     Node(ShellCommandTransformer),
     Yarn(ShellCommandTransformer),
     Poetry(ShellCommandTransformer),
+}
+
+impl TransformerOptions {
+    pub fn transformer(&self) -> Box<dyn Transformer> {
+        match self {
+            Self::Builtin(BuiltinTransformer::TrailingWhitespace) => {
+                Box::new(transformer::transformers::trailing_whitespace)
+            }
+            Self::RawCommand(command_type) => {
+                let command_type = command_type.clone();
+                Box::new(create_shell_transformer(move || {
+                    let mut command = std::process::Command::new(command_type.command_str());
+                    command_type.configure_command(&mut command);
+                    command
+                }))
+            }
+            Self::Poetry(command_type) => {
+                let command_type = command_type.clone();
+                Box::new(create_shell_transformer(move || {
+                    let mut command = std::process::Command::new("poetry");
+                    command.args(&["run", command_type.command_str()]);
+                    command_type.configure_command(&mut command);
+                    command
+                }))
+            }
+            Self::Node(command_type) => {
+                let command_type = command_type.clone();
+                Box::new(create_shell_transformer(move || {
+                    let mut command = std::process::Command::new("npx");
+                    command.arg(command_type.command_str());
+                    command_type.configure_command(&mut command);
+                    command
+                }))
+            }
+            Self::Yarn(command_type) => {
+                let command_type = command_type.clone();
+                Box::new(create_shell_transformer(move || {
+                    let mut command = std::process::Command::new("yarn");
+                    command.args(&["run", command_type.command_str()]);
+                    command_type.configure_command(&mut command);
+                    command
+                }))
+            }
+        }
+    }
 }
 
 pub type Configuration<'a> = HashMap<&'a str, Vec<TransformerOptions>>;
