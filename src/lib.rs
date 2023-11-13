@@ -1,11 +1,11 @@
 use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
-    ApplyLocation, DiffOptions, Repository,
+    ApplyLocation, DiffOptions, Pathspec, Repository,
 };
+use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use serde::{Deserialize};
-pub use transformer::{transform, Transformer, create_shell_transformer};
+pub use transformer::{create_shell_transformer, transform, Transformer};
 
 pub mod transformer {
     use git2::{Blob, Oid, Repository};
@@ -91,7 +91,7 @@ impl From<String> for Error {
     }
 }
 
-pub fn pre_commit() -> Result<(), git2::Error> {
+pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
     let repository = Repository::discover(".")?;
     let mut index = repository.index()?;
     let index_tree_id = index.write_tree()?;
@@ -107,6 +107,16 @@ pub fn pre_commit() -> Result<(), git2::Error> {
 
     for entry in diff.deltas() {
         if !entry.new_file().is_binary() {
+            for pathspec in configuration.keys() {
+                println!(
+                    "Pathspec {} matches?: {}",
+                    pathspec,
+                    Pathspec::new([pathspec]).unwrap().matches_path(
+                        entry.new_file().path().unwrap(),
+                        git2::PathspecFlags::DEFAULT
+                    )
+                );
+            }
             eprintln!("Transforming entry {:?}", entry.new_file().path().unwrap());
             let oid = transform(
                 &repository,
@@ -135,22 +145,47 @@ pub fn pre_commit() -> Result<(), git2::Error> {
 }
 
 #[derive(Debug, Deserialize)]
-pub enum BaseTransformer {
+pub enum BuiltinTransformer {
     TrailingWhitespace,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum ShellCommandTransformer {
     Rustfmt,
     Prettier,
     PyIsort,
     PyBlack,
 }
 
-#[derive(Debug, Deserialize)]
-pub enum BuiltinTransformer {
-    Base(BaseTransformer),
-    Node(BaseTransformer),
-    Yarn(BaseTransformer),
-    Poetry(BaseTransformer),
+impl ShellCommandTransformer {
+    pub fn command_str(&self) -> &'static str {
+        match self {
+            Self::Rustfmt => "rustfmt",
+            Self::Prettier => "prettier",
+            Self::PyIsort => "isort",
+            Self::PyBlack => "black",
+        }
+    }
+
+    pub fn configure_command(&self, command: &mut std::process::Command) {
+        match self {
+            Self::Rustfmt => {
+                command.args(&["--emit", "stdout"]);
+            }
+            _ => {
+                todo!();
+            }
+        }
+    }
 }
 
-pub type Configuration<'a> = HashMap<Cow<'a, str>, Vec<BuiltinTransformer>>;
+#[derive(Debug, Deserialize)]
+pub enum TransformerOptions {
+    Builtin(BuiltinTransformer),
+    RawCommand(ShellCommandTransformer),
+    Node(ShellCommandTransformer),
+    Yarn(ShellCommandTransformer),
+    Poetry(ShellCommandTransformer),
+}
 
-
+pub type Configuration<'a> = HashMap<&'a str, Vec<TransformerOptions>>;
