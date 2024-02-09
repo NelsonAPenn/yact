@@ -35,7 +35,7 @@ pub mod transformer {
 
     /// Apply many transform to an existing blob, creating another (for example,
     /// applying linting)
-    pub fn transforme(
+    pub fn apply_transform_pipeline(
         repository: &Repository,
         blob: &Blob,
         transformers: &Vec<Box<dyn Transformer>>,
@@ -139,7 +139,7 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
                 .collect();
 
             eprintln!("Transforming entry {:?}", entry.new_file().path().unwrap());
-            let oid = transformer::transforme(
+            let oid = transformer::apply_transform_pipeline(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
                 &transformers,
