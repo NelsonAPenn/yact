@@ -1,6 +1,24 @@
 # yact
 
-Yet another commit transformer, and the forbidden fruit of your development process.
+Yet another commit transformer-- but this one is different than the rest!
+
+Enter the forbidden fruit of your development process.
+
+There are many wonderful tools out there that help you quit spending time
+aligning lines of code, remove common mistakes, and sometimes even automatically
+make common simplifications to your code. There are also tools that help
+integrate these tools with your `git` workflow. However, the tools of the latter
+class are not always so wonderful. They usually exhibit a couple main classes of
+problems.
+
+1. Making you readd your changes. This is just annoying.
+2. Not playing nice in cases when some changes are staged and some are unstaged
+   and still in progress. Some tools result in borkage; others make you
+   `git add -p` twice, which is again, just annoying.
+
+`yact` is a standalone binary which operates on low-level git objects directly,
+formatting staged changes behind the scenes without ever pushing the onus back
+on you, and updating your working tree in the most correct way possible.
 
 ## Features
 
