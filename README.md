@@ -24,12 +24,12 @@ on you, and updating your working tree in the most correct way possible.
 
 - Provides a general method for seamlessly applying transformations to committed text files.
 - Plays nice with files with some staged and some unstaged changes.
-- Provides a one-file transform command that can be used in other pre-commit hook management tools. 
+- Provides a one-file transform command that can be used in other pre-commit hook management tools.
 - Provides a replacement for other pre-commit management tools.
 
 ## Considerations
 
-`yact` is focused on (in order): 
+`yact` is focused on (in order):
 
 1. Doing a really good job linting automatically with minimal disturbance to your workflow (better than other solutions)
 2. Correctness. Working with git objects right.
