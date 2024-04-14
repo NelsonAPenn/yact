@@ -21,6 +21,12 @@ pub fn main() {
                 BuiltinTransformer::TrailingWhitespace,
             )],
         ),
+        (
+            "*.md",
+            vec![TransformerOptions::Builtin(
+                BuiltinTransformer::TrailingWhitespace,
+            )],
+        ),
     ]
     .into_iter()
     .collect();
