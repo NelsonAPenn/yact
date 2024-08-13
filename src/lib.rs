@@ -37,7 +37,7 @@ pub mod transformer {
     pub fn apply_transform_pipeline(
         repository: &Repository,
         blob: &Blob,
-        transformers: &Vec<Box<dyn Transformer>>,
+        transformers: &[Box<dyn Transformer>],
     ) -> Result<Oid, crate::Error> {
         let mut transformer_iter = transformers.iter();
         let mut transformed = transformer_iter.next().expect("at least one item")(blob.content())?;
@@ -60,7 +60,7 @@ pub mod transformer {
                 .spawn()
                 .map_err(|_| "shell transformer failed")?;
             let mut stdin = child.stdin.take().ok_or("failed to get stdin")?;
-            let clone = data.iter().copied().collect::<Vec<u8>>();
+            let clone = data.to_vec();
             std::thread::spawn(move || {
                 stdin
                     .write_all(clone.as_slice())
@@ -107,15 +107,11 @@ impl From<String> for Error {
 pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
     let repository = Repository::discover(".")?;
     let mut index = repository.index()?;
-    let index_tree_id = index.write_tree()?;
-    let index_tree = repository.find_tree(index_tree_id)?;
-    eprintln!("Created tree {:?} from index", index_tree);
+    let index_tree = repository.find_tree(index.write_tree()?)?;
     let last_committed_tree = repository.head()?.peel_to_tree()?;
-    eprintln!("Calculating staged diff...");
     let mut diff =
         repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&index_tree), None)?;
     diff.find_similar(None)?;
-    eprintln!("Transforming files...");
     let mut transformed_tree_builder = TreeUpdateBuilder::new();
 
     for entry in diff.deltas() {
@@ -133,9 +129,12 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
             let transformers = configuration[matching_pathspec]
                 .iter()
                 .map(|x| x.transformer())
-                .collect();
+                .collect::<Vec<_>>();
 
-            eprintln!("Transforming entry {:?}", entry.new_file().path().unwrap());
+            eprintln!(
+                "Transforming staged version of file: {}",
+                entry.new_file().path().unwrap().to_str().unwrap()
+            );
             let oid = transformer::apply_transform_pipeline(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
@@ -150,28 +149,29 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
         }
     }
 
-    let transformed_tree_id = transformed_tree_builder.create_updated(&repository, &index_tree)?;
-    let transformed_tree = repository.find_tree(transformed_tree_id)?;
+    let transformed_tree =
+        repository.find_tree(transformed_tree_builder.create_updated(&repository, &index_tree)?)?;
     eprintln!("Created transformed tree {:?}...", transformed_tree);
     index.read_tree(&transformed_tree)?;
     index.write()?;
-    
+
     /*
      * Update the worktree with files from the transformed index. In the case of
      * any conflicts, the worktree version will be preserved.
      */
-    repository.checkout_index(Some(&mut index), Some(
-        CheckoutBuilder::new()
-        .allow_conflicts(true)
-        .update_only(true)
-        .update_index(false)
-        .use_ours(true)
-        )
-    ).unwrap();
+    repository.checkout_index(
+        Some(&mut index),
+        Some(
+            CheckoutBuilder::new()
+                .allow_conflicts(true)
+                .update_only(true)
+                .update_index(false)
+                .use_ours(true),
+        ),
+    )?;
 
     Ok(())
 }
-
 
 #[derive(Debug, Deserialize)]
 pub enum BuiltinTransformer {
@@ -199,7 +199,7 @@ impl ShellCommandTransformer {
     pub fn configure_command(&self, command: &mut std::process::Command) {
         match self {
             Self::Rustfmt => {
-                command.args(&["--emit", "stdout"]);
+                command.args(["--emit", "stdout"]);
             }
             _ => {
                 todo!();
@@ -235,7 +235,7 @@ impl TransformerOptions {
                 let command_type = command_type.clone();
                 Box::new(create_shell_transformer(move || {
                     let mut command = std::process::Command::new("poetry");
-                    command.args(&["run", command_type.command_str()]);
+                    command.args(["run", command_type.command_str()]);
                     command_type.configure_command(&mut command);
                     command
                 }))
@@ -253,7 +253,7 @@ impl TransformerOptions {
                 let command_type = command_type.clone();
                 Box::new(create_shell_transformer(move || {
                     let mut command = std::process::Command::new("yarn");
-                    command.args(&["run", command_type.command_str()]);
+                    command.args(["run", command_type.command_str()]);
                     command_type.configure_command(&mut command);
                     command
                 }))
