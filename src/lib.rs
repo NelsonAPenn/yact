@@ -132,7 +132,7 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
                 .collect::<Vec<_>>();
 
             eprintln!(
-                "Transforming staged version of file: {}",
+                "Transforming staged file: {}",
                 entry.new_file().path().unwrap().to_str().unwrap()
             );
             let oid = transformer::apply_transform_pipeline(
@@ -151,7 +151,6 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
 
     let transformed_tree =
         repository.find_tree(transformed_tree_builder.create_updated(&repository, &index_tree)?)?;
-    eprintln!("Created transformed tree {:?}...", transformed_tree);
     index.read_tree(&transformed_tree)?;
     index.write()?;
 
