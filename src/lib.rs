@@ -1,9 +1,8 @@
 use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
-    ApplyLocation, DiffOptions, Pathspec, Repository,
+    Pathspec, Repository,
 };
 use serde::Deserialize;
-use std::borrow::Cow;
 use std::collections::HashMap;
 pub use transformer::{create_shell_transformer, transform, Transformer};
 
@@ -76,8 +75,6 @@ pub mod transformer {
     }
 
     pub mod transformers {
-        use super::Transformer;
-
         pub fn trailing_whitespace(data: &[u8]) -> Result<Vec<u8>, String> {
             let str_data = std::str::from_utf8(data).map_err(|err| format!("{:?}", err))?;
             let mut out = String::with_capacity(data.len());
@@ -158,8 +155,23 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
     eprintln!("Created transformed tree {:?}...", transformed_tree);
     index.read_tree(&transformed_tree)?;
     index.write()?;
+    
+    /*
+     * Update the worktree with files from the transformed index. In the case of
+     * any conflicts, the worktree version will be preserved.
+     */
+    repository.checkout_index(Some(&mut index), Some(
+        CheckoutBuilder::new()
+        .allow_conflicts(true)
+        .update_only(true)
+        .update_index(false)
+        .use_ours(true)
+        )
+    ).unwrap();
+
     Ok(())
 }
+
 
 #[derive(Debug, Deserialize)]
 pub enum BuiltinTransformer {
