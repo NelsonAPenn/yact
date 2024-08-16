@@ -1,6 +1,9 @@
-use git2::{build::TreeUpdateBuilder, Pathspec, Repository};
+use git2::{
+    build::{CheckoutBuilder, TreeUpdateBuilder},
+    MergeOptions, Pathspec, Repository, Tree, TreeWalkMode, TreeWalkResult,
+};
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 pub use transformer::{create_shell_transformer, transform, Transformer};
 #[cfg(test)]
 mod tests;
@@ -103,6 +106,39 @@ impl From<String> for Error {
     }
 }
 
+fn build_worktree_slice<'repo>(
+    repo: &'repo Repository,
+    formatted: &'repo Tree,
+    ancestor: &'repo Tree,
+) -> Tree<'repo> {
+    let mut builder = TreeUpdateBuilder::new();
+    let repo_path = repo.workdir().unwrap();
+    formatted
+        .walk(TreeWalkMode::PreOrder, |path, entry| {
+            let relative_file_path = Path::new(path).join(entry.name().unwrap());
+            let absolute_file_path = repo_path.join(&relative_file_path);
+            if absolute_file_path.is_file() {
+                let oid = repo
+                    .odb()
+                    .unwrap()
+                    .write(
+                        git2::ObjectType::Blob,
+                        &std::fs::read(absolute_file_path).unwrap(),
+                    )
+                    .unwrap();
+                builder.upsert(
+                    relative_file_path.to_str().unwrap(),
+                    oid,
+                    git2::FileMode::Blob,
+                );
+            }
+            TreeWalkResult::Ok
+        })
+        .unwrap();
+    repo.find_tree(builder.create_updated(repo, ancestor).unwrap())
+        .unwrap()
+}
+
 pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), git2::Error> {
     let repository = Repository::discover(path)?;
     let mut index = repository.index()?;
@@ -153,25 +189,41 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), git2:
     index.read_tree(&transformed_tree)?;
     index.write()?;
 
+    let mini_worktree = build_worktree_slice(&repository, &transformed_tree, &index_tree);
+
+    let mut merged_index = repository
+        .merge_trees(
+            &index_tree,
+            &mini_worktree,
+            &transformed_tree,
+            Some(
+                MergeOptions::new()
+                    .file_favor(git2::FileFavor::Ours)
+                    .fail_on_conflict(false),
+            ),
+        )
+        .unwrap();
     /*
      * Update the worktree with files from the transformed index. In the case of
      * any conflicts, the worktree version will be preserved.
      *
      * Unfortunately, the lines below mean that any change results in a
      * conflict, rendering this useless.
+     *
+     * ALTERNATIVELY: build a tree for each file in the transformed tree from
+     * the workdir, merge trees (use ours), and checkout changes (update only,
+     * force).
      */
-    /*
     repository.checkout_index(
-        Some(&mut index),
+        Some(&mut merged_index),
         Some(
             CheckoutBuilder::new()
                 .allow_conflicts(true)
                 .update_only(true)
                 .update_index(false)
-                .use_ours(true),
+                .force(),
         ),
     )?;
-    */
 
     Ok(())
 }
