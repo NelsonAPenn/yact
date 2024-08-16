@@ -5,6 +5,8 @@ use git2::{
 use serde::Deserialize;
 use std::collections::HashMap;
 pub use transformer::{create_shell_transformer, transform, Transformer};
+#[cfg(test)]
+mod tests;
 
 pub mod transformer {
     use git2::{Blob, Oid, Repository};
@@ -157,7 +159,11 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
     /*
      * Update the worktree with files from the transformed index. In the case of
      * any conflicts, the worktree version will be preserved.
+     * 
+     * Unfortunately, the lines below mean that any change results in a
+     * conflict, rendering this useless.
      */
+    /*
     repository.checkout_index(
         Some(&mut index),
         Some(
@@ -168,6 +174,7 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
                 .use_ours(true),
         ),
     )?;
+    */
 
     Ok(())
 }
