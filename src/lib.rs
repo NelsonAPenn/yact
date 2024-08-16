@@ -1,7 +1,4 @@
-use git2::{
-    build::{CheckoutBuilder, TreeUpdateBuilder},
-    Pathspec, Repository,
-};
+use git2::{build::TreeUpdateBuilder, Pathspec, Repository};
 use serde::Deserialize;
 use std::collections::HashMap;
 pub use transformer::{create_shell_transformer, transform, Transformer};
@@ -106,8 +103,8 @@ impl From<String> for Error {
     }
 }
 
-pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
-    let repository = Repository::discover(".")?;
+pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), git2::Error> {
+    let repository = Repository::discover(path)?;
     let mut index = repository.index()?;
     let index_tree = repository.find_tree(index.write_tree()?)?;
     let last_committed_tree = repository.head()?.peel_to_tree()?;
@@ -159,7 +156,7 @@ pub fn pre_commit(configuration: &Configuration) -> Result<(), git2::Error> {
     /*
      * Update the worktree with files from the transformed index. In the case of
      * any conflicts, the worktree version will be preserved.
-     * 
+     *
      * Unfortunately, the lines below mean that any change results in a
      * conflict, rendering this useless.
      */

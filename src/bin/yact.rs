@@ -30,5 +30,5 @@ pub fn main() {
     ]
     .into_iter()
     .collect();
-    pre_commit(&config).unwrap();
+    pre_commit(&config, ".").unwrap();
 }
