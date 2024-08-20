@@ -3,6 +3,7 @@ name = "yact"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
+description = "Yet another commit transformer: a tool for formatting staged files with minimal disturbance to developer workflow."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,9 +11,14 @@ license = "GPL-3.0-or-later"
 lto = true
 
 [dependencies]
-git2 = {version = "0.19", default-features = false}
+clap = { version = "4.5.16", features = ["derive"], optional = true }
+git2 = { version = "0.19", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[features]
+default = ["cli"]
+cli = ["clap"]
 
 [dev-dependencies]
 uuid = { version = "1.10.0", features = ["v4"] }
