@@ -27,7 +27,7 @@ fn fresh_repo() -> (Repository, PathBuf) {
     std::fs::create_dir(&repo_path).unwrap();
     let repo = Repository::init(&repo_path).unwrap();
     let mut index = repo.index().unwrap();
-    std::fs::write(repo_path.join("README.md"), "# Blah").unwrap();
+    std::fs::write(repo_path.join("README.md"), "# Blah\n").unwrap();
     index.add_path(std::path::Path::new("README.md")).unwrap();
     let tree = repo.find_tree(index.write_tree().unwrap()).unwrap();
     repo.commit(
@@ -57,8 +57,8 @@ fn basic_operation_works() {
     index.add_path(readme_path).unwrap();
     index.write().unwrap();
 
-    pre_commit(&config(), repo_path.to_str().unwrap()).unwrap();
-
+    let pre_commit_result = pre_commit(&config(), repo_path.to_str().unwrap());
+    assert!(matches!(pre_commit_result, Err(crate::Error::EmptyIndex)));
     /*
      * After pre-commit runs, commit the index
      */
@@ -112,7 +112,8 @@ fn conflict_handled_correctly() {
      */
     std::fs::write(repo_path.join("README.md"), "# Blab").unwrap();
 
-    pre_commit(&config(), repo_path.to_str().unwrap()).unwrap();
+    let pre_commit_result = pre_commit(&config(), repo_path.to_str().unwrap());
+    assert!(matches!(pre_commit_result, Err(crate::Error::EmptyIndex)));
 
     /*
      * After pre-commit runs, commit the index
