@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Configure git
+      run: git config --global user.name "Test User" && git config --global user.email "test.user@github.com"
     - name: Build
       run: cargo build --verbose
     - name: Lint
