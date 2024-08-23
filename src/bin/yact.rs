@@ -1,6 +1,8 @@
-use yact::{pre_commit, BuiltinTransformer, ShellCommandTransformer, TransformerOptions};
+use std::process::ExitCode;
 
-pub fn main() {
+use yact::{pre_commit, BuiltinTransformer, Error, ShellCommandTransformer, TransformerOptions};
+
+pub fn main() -> ExitCode {
     let config = [
         (
             "**/*.rs",
@@ -30,5 +32,22 @@ pub fn main() {
     ]
     .into_iter()
     .collect();
-    pre_commit(&config, ".").unwrap();
+    match pre_commit(&config, ".") {
+        Err(Error::EmptyIndex) => {
+            eprintln!("Aborting commit. No staged changes or they were formatted away.");
+            ExitCode::FAILURE
+        }
+        Err(Error::TransformerError(message)) => {
+            eprintln!(
+                "Error occurred in one of the pre-commit transformers: {}",
+                message
+            );
+            ExitCode::FAILURE
+        }
+        Err(Error::GitError(err)) => {
+            eprintln!("Unexpected git error: {}", err);
+            ExitCode::FAILURE
+        }
+        Ok(_) => ExitCode::SUCCESS,
+    }
 }
