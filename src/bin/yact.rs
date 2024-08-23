@@ -1,5 +1,7 @@
+use std::process::ExitCode;
+
 use clap::Parser;
-use yact::{pre_commit, BuiltinTransformer, ShellCommandTransformer, TransformerOptions};
+use yact::{pre_commit, BuiltinTransformer, Error, ShellCommandTransformer, TransformerOptions};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -11,7 +13,7 @@ pub struct Args {
      */
 }
 
-pub fn main() {
+pub fn main() -> ExitCode {
     let _cli = Args::parse();
     let config = [
         (
@@ -42,5 +44,22 @@ pub fn main() {
     ]
     .into_iter()
     .collect();
-    pre_commit(&config, ".").unwrap();
+    match pre_commit(&config, ".") {
+        Err(Error::EmptyIndex) => {
+            eprintln!("Aborting commit. No staged changes or they were formatted away.");
+            ExitCode::FAILURE
+        }
+        Err(Error::TransformerError(message)) => {
+            eprintln!(
+                "Error occurred in one of the pre-commit transformers: {}",
+                message
+            );
+            ExitCode::FAILURE
+        }
+        Err(Error::GitError(err)) => {
+            eprintln!("Unexpected git error: {}", err);
+            ExitCode::FAILURE
+        }
+        Ok(_) => ExitCode::SUCCESS,
+    }
 }

@@ -9,6 +9,7 @@ description = "Yet another commit transformer: a tool for formatting staged file
 
 [profile.release]
 lto = true
+strip = true
 
 [dependencies]
 clap = { version = "4.5.16", features = ["derive"], optional = true }

@@ -95,6 +95,11 @@ pub enum Error {
 
     /// One of the transformers encountered an error.
     TransformerError(String),
+
+    /// No other errors, but the resulting index was empty.
+    ///
+    /// The commit should be aborted.
+    EmptyIndex,
 }
 
 impl From<git2::Error> for Error {
@@ -221,6 +226,13 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error
                 .force(),
         ),
     )?;
+
+    let final_diff =
+        repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&transformed_tree), None)?;
+
+    if final_diff.stats()?.files_changed() == 0 {
+        return Err(Error::EmptyIndex);
+    }
 
     Ok(())
 }
