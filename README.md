@@ -4,12 +4,26 @@ Yet another commit transformer-- but this one is different than the rest!
 
 Enter the forbidden fruit of your development process.
 
+## Features
+
+`yact` is focused on (in order):
+
+1. Seamlessly applying formatters with minimal disturbance to your workflow or git history (better than other solutions).
+    - Transparently transforms staged changes for commit
+    - Merges the resulting formatting changes back into working tree
+2. Using the first-party implementation (`libgit2`) whenever possible when working with git repositories.
+3. Performance
+4. Efficiency
+
+`yact` provides both a method for configuring what transformers to run on which files in a project as well as a method for integrating with other pre-commit management tools (like `pre-commit`).
+
+## Why another tool?
+
 There are many wonderful tools out there that help you quit spending time
 aligning lines of code, remove common mistakes, and sometimes even automatically
 make common simplifications to your code. There are also tools that help
 integrate these tools with your `git` workflow. However, the tools of the latter
-class are not always so wonderful. They usually exhibit a couple main classes of
-problems.
+class usually exhibit a couple main classes of problems.
 
 1. Making you readd your changes. This is just annoying.
 2. Not playing nice in cases when some changes are staged and some are unstaged
@@ -20,26 +34,9 @@ problems.
 formatting staged changes behind the scenes without ever pushing the onus back
 on you, and updating your working tree in the most correct way possible.
 
-## Features
-
-- Provides a general method for seamlessly applying transformations to committed text files.
-- Plays nice with files with some staged and some unstaged changes.
-- Provides a one-file transform command that can be used in other pre-commit hook management tools.
-- Provides a replacement for other pre-commit management tools.
-
 ## Considerations
 
-`yact` is focused on (in order):
-
-1. Doing a really good job linting automatically with minimal disturbance to your workflow (better than other solutions)
-2. Correctness. Working with git objects right.
-3. Effectiveness / efficiency
-
-It is not focused on:
-
-- Preserving your worktree exactly as it was.
-
-`yact` could be considered dangerous by some, but would be considered convenient by most. `yact` will never bork your git history. However, `yact` will take liberty in modifying your working tree as it sees fit.
+`yact` will never bork your git history. However, `yact` will take liberty in modifying your working tree as it sees fit. This is done in a fairly safe manner, merging formatting changes back into your worktree but keeping the worktree's version in case of conflicts.
 
 ## How it works
 

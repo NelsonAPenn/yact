@@ -206,15 +206,8 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error
         ),
     )?;
     /*
-     * Update the worktree with files from the transformed index. In the case of
-     * any conflicts, the worktree version will be preserved.
-     *
-     * Unfortunately, the lines below mean that any change results in a
-     * conflict, rendering this useless.
-     *
-     * ALTERNATIVELY: build a tree for each file in the transformed tree from
-     * the workdir, merge trees (use ours), and checkout changes (update only,
-     * force).
+     * Build a tree for each file in the transformed tree from the workdir,
+     * merge trees (use ours), and checkout changes (update only, force).
      */
     repository.checkout_index(
         Some(&mut merged_index),
