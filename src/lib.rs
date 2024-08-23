@@ -227,9 +227,8 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error
         ),
     )?;
 
-    let mut final_diff =
+    let final_diff =
         repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&transformed_tree), None)?;
-    final_diff.find_similar(None)?;
 
     if final_diff.stats()?.files_changed() == 0 {
         return Err(Error::EmptyIndex);
