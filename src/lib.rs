@@ -92,6 +92,7 @@ pub mod transformer {
 pub enum Error {
     ConfigurationNotFound,
     ConfigurationParseError(toml::de::Error),
+    ConfigurationEncodingError(std::str::Utf8Error),
     RepositoryIsBare,
 
     /// An error was returned from `libgit2`.
@@ -124,6 +125,12 @@ impl From<String> for Error {
     }
 }
 
+impl From<std::str::Utf8Error> for Error {
+    fn from(err: std::str::Utf8Error) -> Self {
+        Self::ConfigurationEncodingError(err)
+    }
+}
+
 fn build_worktree_slice<'repo>(
     repo: &'repo Repository,
     formatted: &'repo Tree,
@@ -152,6 +159,16 @@ fn build_worktree_slice<'repo>(
         TreeWalkResult::Ok
     })?;
     repo.find_tree(builder.create_updated(repo, ancestor).unwrap())
+}
+
+pub fn load_configuration(repository: &Repository) -> Result<Configuration, Error> {
+    let path = repository.workdir().ok_or(Error::RepositoryIsBare)?;
+
+    let file =
+        std::fs::read(path.join(".yactrc.toml")).map_err(|_| Error::ConfigurationNotFound)?;
+    let config_str = std::str::from_utf8(&file)?;
+
+    Ok(toml::from_str(config_str)?)
 }
 
 pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error> {

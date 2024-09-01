@@ -42,7 +42,22 @@ pub fn main() -> ExitCode {
             eprintln!("Unexpected git error: {}", err);
             ExitCode::FAILURE
         }
+        Err(Error::ConfigurationParseError(err)) => {
+            eprintln!("Failed to parse configuration: {}", err);
+            ExitCode::FAILURE
+        }
+        Err(Error::ConfigurationEncodingError(_)) => {
+            eprintln!("Configuration file was not valid UTF-8.");
+            ExitCode::FAILURE
+        }
+        Err(Error::RepositoryIsBare) => {
+            eprintln!("Cannot run yact on a bare repository.");
+            ExitCode::FAILURE
+        }
+        Err(Error::ConfigurationNotFound) => {
+            eprintln!("Could not resolve .yactrc.toml configuration file. Ensure it is located at the root of the repository");
+            ExitCode::FAILURE
+        }
         Ok(_) => ExitCode::SUCCESS,
-        _ => panic!(),
     }
 }
