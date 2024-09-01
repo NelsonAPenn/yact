@@ -1,7 +1,7 @@
 use std::process::ExitCode;
 
 use clap::Parser;
-use yact::{pre_commit, BuiltinTransformer, Error, ShellCommandTransformer, TransformerOptions};
+use yact::{pre_commit, Error};
 
 #[derive(Parser)]
 #[command(version, about)]

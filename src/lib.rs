@@ -2,8 +2,8 @@ use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
     MergeOptions, Pathspec, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::Path};
+use serde::Deserialize;
+use std::path::Path;
 pub use transformer::{create_shell_transformer, transform, Transformer};
 #[cfg(test)]
 mod tests;
