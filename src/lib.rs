@@ -2,7 +2,7 @@ use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
     MergeOptions, Pathspec, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::Path};
 pub use transformer::{create_shell_transformer, transform, Transformer};
 #[cfg(test)]
@@ -90,6 +90,10 @@ pub mod transformer {
 }
 #[derive(Debug)]
 pub enum Error {
+    ConfigurationNotFound,
+    ConfigurationParseError(toml::de::Error),
+    RepositoryIsBare,
+
     /// An error was returned from `libgit2`.
     GitError(git2::Error),
 
@@ -100,6 +104,12 @@ pub enum Error {
     ///
     /// The commit should be aborted.
     EmptyIndex,
+}
+
+impl From<toml::de::Error> for Error {
+    fn from(err: toml::de::Error) -> Self {
+        Self::ConfigurationParseError(err)
+    }
 }
 
 impl From<git2::Error> for Error {
@@ -156,17 +166,20 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error
 
     for entry in diff.deltas() {
         if !entry.new_file().is_binary() {
-            let matching_pathspec = configuration.keys().find(|pathspec| {
-                Pathspec::new([pathspec]).unwrap().matches_path(
-                    entry.new_file().path().unwrap(),
-                    git2::PathspecFlags::DEFAULT,
-                )
+            let matching_config_item = configuration.items.iter().find(|config_item| {
+                Pathspec::new([&config_item.pathspec])
+                    .unwrap()
+                    .matches_path(
+                        entry.new_file().path().unwrap(),
+                        git2::PathspecFlags::DEFAULT,
+                    )
             });
-            if matching_pathspec.is_none() {
+            if matching_config_item.is_none() {
                 continue;
             }
-            let matching_pathspec = matching_pathspec.unwrap();
-            let transformers = configuration[matching_pathspec]
+            let transformers = matching_config_item
+                .unwrap()
+                .transformers
                 .iter()
                 .map(|x| x.transformer())
                 .collect::<Vec<_>>();
@@ -319,4 +332,13 @@ impl TransformerOptions {
     }
 }
 
-pub type Configuration<'a> = HashMap<&'a str, Vec<TransformerOptions>>;
+#[derive(Debug, Deserialize)]
+pub struct ConfigurationItem {
+    pub pathspec: String,
+    pub transformers: Vec<TransformerOptions>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Configuration {
+    items: Vec<ConfigurationItem>,
+}

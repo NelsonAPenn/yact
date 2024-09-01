@@ -15,35 +15,17 @@ pub struct Args {
 
 pub fn main() -> ExitCode {
     let _cli = Args::parse();
-    let config = [
-        (
-            "**/*.rs",
-            vec![TransformerOptions::RawCommand(
-                ShellCommandTransformer::Rustfmt,
-            )],
-        ),
-        (
-            "**/*.py",
-            vec![
-                TransformerOptions::Poetry(ShellCommandTransformer::PyIsort),
-                TransformerOptions::Poetry(ShellCommandTransformer::PyBlack),
-            ],
-        ),
-        (
-            "**/*.md",
-            vec![TransformerOptions::Builtin(
-                BuiltinTransformer::TrailingWhitespace,
-            )],
-        ),
-        (
-            "*.md",
-            vec![TransformerOptions::Builtin(
-                BuiltinTransformer::TrailingWhitespace,
-            )],
-        ),
-    ]
-    .into_iter()
-    .collect();
+
+    let repo = git2::Repository::discover(".").unwrap();
+    let path = repo.workdir().unwrap();
+
+    let file = std::fs::read(path.join(".yactrc.toml"))
+        .map_err(|_| Error::ConfigurationNotFound)
+        .unwrap();
+    let config_str = std::str::from_utf8(&file).unwrap();
+
+    let config = toml::from_str(config_str).unwrap();
+
     match pre_commit(&config, ".") {
         Err(Error::EmptyIndex) => {
             eprintln!("Aborting commit. No staged changes or they were formatted away.");
@@ -61,5 +43,6 @@ pub fn main() -> ExitCode {
             ExitCode::FAILURE
         }
         Ok(_) => ExitCode::SUCCESS,
+        _ => panic!(),
     }
 }

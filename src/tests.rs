@@ -4,19 +4,19 @@ use std::{
     str::FromStr,
 };
 
-use crate::{BuiltinTransformer, Configuration, TransformerOptions};
+use crate::{BuiltinTransformer, Configuration, ConfigurationItem, TransformerOptions};
 
 use super::pre_commit;
 
-fn config() -> Configuration<'static> {
-    [(
-        "*.md",
-        vec![TransformerOptions::Builtin(
-            BuiltinTransformer::TrailingWhitespace,
-        )],
-    )]
-    .into_iter()
-    .collect()
+fn config() -> Configuration {
+    Configuration {
+        items: vec![ConfigurationItem {
+            pathspec: "*.md".to_string(),
+            transformers: vec![TransformerOptions::Builtin(
+                BuiltinTransformer::TrailingWhitespace,
+            )],
+        }],
+    }
 }
 
 fn fresh_repo() -> (Repository, PathBuf) {
