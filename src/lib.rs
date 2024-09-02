@@ -68,11 +68,14 @@ pub mod transformer {
                     .write_all(clone.as_slice())
                     .expect("Failed to write to stream");
             });
-            let stdout = child
+            let output = child
                 .wait_with_output()
-                .map_err(|_| "Failed to read stdout")?
-                .stdout;
-            Ok(stdout)
+                .map_err(|_| "Failed to wait on transformer process")?;
+
+            if !output.status.success() {
+                return Err("Transformer process produced nonzero exit code.".to_string());
+            }
+            Ok(output.stdout)
         }
     }
 
