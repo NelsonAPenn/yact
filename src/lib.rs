@@ -3,7 +3,7 @@ use git2::{
     MergeOptions, Pathspec, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 pub use transformer::{create_shell_transformer, transform, Transformer};
 #[cfg(test)]
 mod tests;
@@ -272,15 +272,21 @@ pub enum ShellCommandTransformer {
     Prettier,
     PyIsort,
     PyBlack,
+    System {
+        command: String,
+        env: HashMap<String, String>,
+        args: Vec<String>,
+    },
 }
 
 impl ShellCommandTransformer {
-    pub fn command_str(&self) -> &'static str {
+    pub fn command_str(&self) -> &str {
         match self {
             Self::Rustfmt => "rustfmt",
             Self::Prettier => "prettier",
             Self::PyIsort => "isort",
             Self::PyBlack => "black",
+            Self::System { command, .. } => command.as_str(),
         }
     }
 
@@ -288,6 +294,10 @@ impl ShellCommandTransformer {
         match self {
             Self::Rustfmt => {
                 command.args(["--emit", "stdout"]);
+            }
+            Self::System { env, args, .. } => {
+                command.envs(env);
+                command.args(args);
             }
             _ => {
                 todo!();
