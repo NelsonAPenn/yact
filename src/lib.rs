@@ -307,9 +307,6 @@ impl ShellCommandTransformer {
                  * box. No action necessary.
                  */
             }
-            _ => {
-                todo!();
-            }
         }
     }
 }
