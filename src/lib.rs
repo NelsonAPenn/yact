@@ -2,8 +2,8 @@ use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
     MergeOptions, Pathspec, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
-use serde::Deserialize;
-use std::{collections::HashMap, path::Path};
+use serde::{Deserialize, Serialize};
+use std::path::Path;
 pub use transformer::{create_shell_transformer, transform, Transformer};
 #[cfg(test)]
 mod tests;
@@ -90,6 +90,11 @@ pub mod transformer {
 }
 #[derive(Debug)]
 pub enum Error {
+    ConfigurationNotFound,
+    ConfigurationParseError(toml::de::Error),
+    ConfigurationEncodingError(std::str::Utf8Error),
+    RepositoryIsBare,
+
     /// An error was returned from `libgit2`.
     GitError(git2::Error),
 
@@ -102,6 +107,12 @@ pub enum Error {
     EmptyIndex,
 }
 
+impl From<toml::de::Error> for Error {
+    fn from(err: toml::de::Error) -> Self {
+        Self::ConfigurationParseError(err)
+    }
+}
+
 impl From<git2::Error> for Error {
     fn from(err: git2::Error) -> Self {
         Self::GitError(err)
@@ -111,6 +122,12 @@ impl From<git2::Error> for Error {
 impl From<String> for Error {
     fn from(err: String) -> Self {
         Self::TransformerError(err)
+    }
+}
+
+impl From<std::str::Utf8Error> for Error {
+    fn from(err: std::str::Utf8Error) -> Self {
+        Self::ConfigurationEncodingError(err)
     }
 }
 
@@ -144,8 +161,19 @@ fn build_worktree_slice<'repo>(
     repo.find_tree(builder.create_updated(repo, ancestor).unwrap())
 }
 
-pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error> {
+pub fn load_configuration(repository: &Repository) -> Result<Configuration, Error> {
+    let path = repository.workdir().ok_or(Error::RepositoryIsBare)?;
+
+    let file =
+        std::fs::read(path.join(".yactrc.toml")).map_err(|_| Error::ConfigurationNotFound)?;
+    let config_str = std::str::from_utf8(&file)?;
+
+    Ok(toml::from_str(config_str)?)
+}
+
+pub fn pre_commit<P: AsRef<Path>>(path: P) -> Result<(), Error> {
     let repository = Repository::discover(path)?;
+    let configuration = load_configuration(&repository)?;
     let mut index = repository.index()?;
     let index_tree = repository.find_tree(index.write_tree()?)?;
     let last_committed_tree = repository.head()?.peel_to_tree()?;
@@ -156,17 +184,20 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error
 
     for entry in diff.deltas() {
         if !entry.new_file().is_binary() {
-            let matching_pathspec = configuration.keys().find(|pathspec| {
-                Pathspec::new([pathspec]).unwrap().matches_path(
-                    entry.new_file().path().unwrap(),
-                    git2::PathspecFlags::DEFAULT,
-                )
+            let matching_config_item = configuration.items.iter().find(|config_item| {
+                Pathspec::new([&config_item.pathspec])
+                    .unwrap()
+                    .matches_path(
+                        entry.new_file().path().unwrap(),
+                        git2::PathspecFlags::DEFAULT,
+                    )
             });
-            if matching_pathspec.is_none() {
+            if matching_config_item.is_none() {
                 continue;
             }
-            let matching_pathspec = matching_pathspec.unwrap();
-            let transformers = configuration[matching_pathspec]
+            let transformers = matching_config_item
+                .unwrap()
+                .transformers
                 .iter()
                 .map(|x| x.transformer())
                 .collect::<Vec<_>>();
@@ -230,12 +261,12 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error
     Ok(())
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum BuiltinTransformer {
     TrailingWhitespace,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShellCommandTransformer {
     Rustfmt,
     Prettier,
@@ -265,7 +296,7 @@ impl ShellCommandTransformer {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum TransformerOptions {
     Builtin(BuiltinTransformer),
     RawCommand(ShellCommandTransformer),
@@ -319,4 +350,13 @@ impl TransformerOptions {
     }
 }
 
-pub type Configuration<'a> = HashMap<&'a str, Vec<TransformerOptions>>;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ConfigurationItem {
+    pub pathspec: String,
+    pub transformers: Vec<TransformerOptions>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Configuration {
+    items: Vec<ConfigurationItem>,
+}

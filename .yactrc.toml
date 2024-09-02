@@ -1,0 +1,5 @@
+items = [
+    { pathspec = "**/*.rs", transformers = [ {RawCommand = "Rustfmt"} ]},
+    { pathspec = "**/*.md", transformers = [ {Builtin = "TrailingWhitespace" }]},
+    { pathspec = "*.md", transformers = [ {Builtin = "TrailingWhitespace"} ]}
+]

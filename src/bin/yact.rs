@@ -1,50 +1,18 @@
-use std::process::ExitCode;
+use std::{path::PathBuf, process::ExitCode};
 
 use clap::Parser;
-use yact::{pre_commit, BuiltinTransformer, Error, ShellCommandTransformer, TransformerOptions};
+use yact::{pre_commit, Error};
 
 #[derive(Parser)]
 #[command(version, about)]
 pub struct Args {
-    /*
-     * TODO: add config file and configuration
-     * #[arg(short, long, value_name="CONFIG_FILE")]
-     * config: Option<PathBuf>,
-     */
+    #[arg(short, long, value_name = "path to workspace")]
+    path: Option<PathBuf>,
 }
 
 pub fn main() -> ExitCode {
-    let _cli = Args::parse();
-    let config = [
-        (
-            "**/*.rs",
-            vec![TransformerOptions::RawCommand(
-                ShellCommandTransformer::Rustfmt,
-            )],
-        ),
-        (
-            "**/*.py",
-            vec![
-                TransformerOptions::Poetry(ShellCommandTransformer::PyIsort),
-                TransformerOptions::Poetry(ShellCommandTransformer::PyBlack),
-            ],
-        ),
-        (
-            "**/*.md",
-            vec![TransformerOptions::Builtin(
-                BuiltinTransformer::TrailingWhitespace,
-            )],
-        ),
-        (
-            "*.md",
-            vec![TransformerOptions::Builtin(
-                BuiltinTransformer::TrailingWhitespace,
-            )],
-        ),
-    ]
-    .into_iter()
-    .collect();
-    match pre_commit(&config, ".") {
+    let args = Args::parse();
+    match pre_commit(&args.path.unwrap_or(PathBuf::from("."))) {
         Err(Error::EmptyIndex) => {
             eprintln!("Aborting commit. No staged changes or they were formatted away.");
             ExitCode::FAILURE
@@ -58,6 +26,22 @@ pub fn main() -> ExitCode {
         }
         Err(Error::GitError(err)) => {
             eprintln!("Unexpected git error: {}", err);
+            ExitCode::FAILURE
+        }
+        Err(Error::ConfigurationParseError(err)) => {
+            eprintln!("Failed to parse configuration: {}", err);
+            ExitCode::FAILURE
+        }
+        Err(Error::ConfigurationEncodingError(_)) => {
+            eprintln!("Configuration file was not valid UTF-8.");
+            ExitCode::FAILURE
+        }
+        Err(Error::RepositoryIsBare) => {
+            eprintln!("Cannot run yact on a bare repository.");
+            ExitCode::FAILURE
+        }
+        Err(Error::ConfigurationNotFound) => {
+            eprintln!("Could not resolve .yactrc.toml configuration file. Ensure it is located at the root of the repository");
             ExitCode::FAILURE
         }
         Ok(_) => ExitCode::SUCCESS,
