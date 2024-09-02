@@ -38,6 +38,20 @@ items = [
 yact
 ```
 
+## Transformers
+
+`yact` defines a transformer as any process that applies some sort of formatting to a file. `yact` includes builtin transformers (written in native Rust) and transformers that invoke another process.
+
+The standard interface for transformers that are a separate process are a command that reads a source file in from stdin and writes the formatter version to stdout, returning a nonzero exit code if the operation failed.
+
+`yact` has the following builtin transformers:
+
+- `TrailingWhitespace`: trims trailing whitespace and ensures the source file ends in a newline.
+
+Additionally, `yact` has options for the following popular transformers (simply providing the correct command-line arguments to them):
+
+- `Rustfmt`
+
 ## Why another tool?
 
 There are many wonderful tools out there that help you quit spending time
