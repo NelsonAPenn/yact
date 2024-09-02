@@ -270,14 +270,17 @@ pub enum BuiltinTransformer {
 pub enum ShellCommandTransformer {
     Rustfmt,
     ClangFormat,
-    Prettier,
-    PyIsort,
-    PyBlack,
     System {
         command: String,
         env: HashMap<String, String>,
         args: Vec<String>,
     },
+    /*
+     * TODO: support
+     *
+     * - prettier
+     * - ruff
+     */
 }
 
 impl ShellCommandTransformer {
@@ -285,9 +288,6 @@ impl ShellCommandTransformer {
         match self {
             Self::Rustfmt => "rustfmt",
             Self::ClangFormat => "clang-format",
-            Self::Prettier => "prettier",
-            Self::PyIsort => "isort",
-            Self::PyBlack => "black",
             Self::System { command, .. } => command.as_str(),
         }
     }
@@ -318,9 +318,6 @@ impl ShellCommandTransformer {
 pub enum TransformerOptions {
     Builtin(BuiltinTransformer),
     RawCommand(ShellCommandTransformer),
-    Node(ShellCommandTransformer),
-    Yarn(ShellCommandTransformer),
-    Poetry(ShellCommandTransformer),
 }
 
 impl TransformerOptions {
@@ -333,33 +330,6 @@ impl TransformerOptions {
                 let command_type = command_type.clone();
                 Box::new(create_shell_transformer(move || {
                     let mut command = std::process::Command::new(command_type.command_str());
-                    command_type.configure_command(&mut command);
-                    command
-                }))
-            }
-            Self::Poetry(command_type) => {
-                let command_type = command_type.clone();
-                Box::new(create_shell_transformer(move || {
-                    let mut command = std::process::Command::new("poetry");
-                    command.args(["run", command_type.command_str()]);
-                    command_type.configure_command(&mut command);
-                    command
-                }))
-            }
-            Self::Node(command_type) => {
-                let command_type = command_type.clone();
-                Box::new(create_shell_transformer(move || {
-                    let mut command = std::process::Command::new("npx");
-                    command.arg(command_type.command_str());
-                    command_type.configure_command(&mut command);
-                    command
-                }))
-            }
-            Self::Yarn(command_type) => {
-                let command_type = command_type.clone();
-                Box::new(create_shell_transformer(move || {
-                    let mut command = std::process::Command::new("yarn");
-                    command.args(["run", command_type.command_str()]);
                     command_type.configure_command(&mut command);
                     command
                 }))
