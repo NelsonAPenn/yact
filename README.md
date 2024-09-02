@@ -17,6 +17,27 @@ Enter the forbidden fruit of your development process.
 
 `yact` provides both a method for configuring what transformers to run on which files in a project as well as a method for integrating with other pre-commit management tools (like `pre-commit`).
 
+## Usage
+
+1. Create a config file named `.yactrc.toml` in the workspace root.
+
+```toml
+# Example .yactrc.toml
+items = [
+    { pathspec = "**/*.rs", transformers = [ {RawCommand = "Rustfmt"} ]},
+    { pathspec = "**/*.md", transformers = [ {Builtin = "TrailingWhitespace" }]},
+    { pathspec = "*.md", transformers = [ {Builtin = "TrailingWhitespace"} ]}
+]
+```
+
+2. Update your pre-commit git hook to run yact. This can be as simple as placing the script below at `.git/hooks/pre-commit`
+
+```sh
+#!/bin/sh
+
+yact
+```
+
 ## Why another tool?
 
 There are many wonderful tools out there that help you quit spending time
