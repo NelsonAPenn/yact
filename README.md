@@ -17,6 +17,13 @@ Enter the forbidden fruit of your development process.
 
 `yact` provides both a method for configuring what transformers to run on which files in a project as well as a method for integrating with other pre-commit management tools (like `pre-commit`).
 
+## Requirements and installation
+
+- Requires libgit2
+- For the time being, build and install `yact` from source:
+    1. clone the repository and `cd` into it
+    2. `cargo install --path .`
+
 ## Usage
 
 1. Create a config file named `.yactrc.toml` in the workspace root.
