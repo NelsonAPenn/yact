@@ -1,4 +1,4 @@
-use std::process::ExitCode;
+use std::{path::PathBuf, process::ExitCode};
 
 use clap::Parser;
 use yact::{pre_commit, Error};
@@ -6,27 +6,13 @@ use yact::{pre_commit, Error};
 #[derive(Parser)]
 #[command(version, about)]
 pub struct Args {
-    /*
-     * TODO: add config file and configuration
-     * #[arg(short, long, value_name="CONFIG_FILE")]
-     * config: Option<PathBuf>,
-     */
+    #[arg(short, long, value_name = "path to workspace")]
+    path: Option<PathBuf>,
 }
 
 pub fn main() -> ExitCode {
-    let _cli = Args::parse();
-
-    let repo = git2::Repository::discover(".").unwrap();
-    let path = repo.workdir().unwrap();
-
-    let file = std::fs::read(path.join(".yactrc.toml"))
-        .map_err(|_| Error::ConfigurationNotFound)
-        .unwrap();
-    let config_str = std::str::from_utf8(&file).unwrap();
-
-    let config = toml::from_str(config_str).unwrap();
-
-    match pre_commit(&config, ".") {
+    let args = Args::parse();
+    match pre_commit(&args.path.unwrap_or(PathBuf::from("."))) {
         Err(Error::EmptyIndex) => {
             eprintln!("Aborting commit. No staged changes or they were formatted away.");
             ExitCode::FAILURE

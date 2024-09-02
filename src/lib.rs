@@ -2,7 +2,7 @@ use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
     MergeOptions, Pathspec, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 pub use transformer::{create_shell_transformer, transform, Transformer};
 #[cfg(test)]
@@ -171,8 +171,9 @@ pub fn load_configuration(repository: &Repository) -> Result<Configuration, Erro
     Ok(toml::from_str(config_str)?)
 }
 
-pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error> {
+pub fn pre_commit<P: AsRef<Path>>(path: P) -> Result<(), Error> {
     let repository = Repository::discover(path)?;
+    let configuration = load_configuration(&repository)?;
     let mut index = repository.index()?;
     let index_tree = repository.find_tree(index.write_tree()?)?;
     let last_committed_tree = repository.head()?.peel_to_tree()?;
@@ -260,12 +261,12 @@ pub fn pre_commit(configuration: &Configuration, path: &str) -> Result<(), Error
     Ok(())
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum BuiltinTransformer {
     TrailingWhitespace,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShellCommandTransformer {
     Rustfmt,
     Prettier,
@@ -295,7 +296,7 @@ impl ShellCommandTransformer {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum TransformerOptions {
     Builtin(BuiltinTransformer),
     RawCommand(ShellCommandTransformer),
@@ -349,13 +350,13 @@ impl TransformerOptions {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigurationItem {
     pub pathspec: String,
     pub transformers: Vec<TransformerOptions>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Configuration {
     items: Vec<ConfigurationItem>,
 }
