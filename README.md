@@ -38,6 +38,8 @@ items = [
 yact
 ```
 
+> Note on pathspecs: at the present time, `pathspec` defined in the above items is a git pathspec, which differs subtly from shell globs. Importantly, `**` matches one or more directories rather than zero or more. Because of this, two separate rules are often required to be defined to match all the files of one filetype. This behavior may change in the future.
+
 ## Transformers
 
 `yact` defines a transformer as any process that applies some sort of formatting to a file. `yact` includes builtin transformers (written in native Rust) and transformers that invoke another process.
@@ -51,6 +53,15 @@ The standard interface for transformers that are a separate process are a comman
 Additionally, `yact` has options for the following popular transformers (simply providing the correct command-line arguments to them):
 
 - `Rustfmt`
+- `ClangFormat`
+
+Finally, `yact` provides a catch-all `System` transformer where command, env, and args can be configured. Example below.
+
+```toml
+[[items]]
+pathspec = "**/*.rs"
+transformers = [ { System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}]
+```
 
 ## Why another tool?
 
