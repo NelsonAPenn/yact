@@ -12,7 +12,7 @@ pub struct Args {
 
 pub fn main() -> ExitCode {
     let args = Args::parse();
-    match pre_commit(&args.path.unwrap_or(PathBuf::from("."))) {
+    match pre_commit(args.path.unwrap_or(PathBuf::from("."))) {
         Err(Error::EmptyIndex) => {
             eprintln!("Aborting commit. No staged changes or they were formatted away.");
             ExitCode::FAILURE
