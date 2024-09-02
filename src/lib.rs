@@ -269,6 +269,7 @@ pub enum BuiltinTransformer {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShellCommandTransformer {
     Rustfmt,
+    ClangFormat,
     Prettier,
     PyIsort,
     PyBlack,
@@ -283,6 +284,7 @@ impl ShellCommandTransformer {
     pub fn command_str(&self) -> &str {
         match self {
             Self::Rustfmt => "rustfmt",
+            Self::ClangFormat => "clang-format",
             Self::Prettier => "prettier",
             Self::PyIsort => "isort",
             Self::PyBlack => "black",
@@ -298,6 +300,12 @@ impl ShellCommandTransformer {
             Self::System { env, args, .. } => {
                 command.envs(env);
                 command.args(args);
+            }
+            Self::ClangFormat => {
+                /*
+                 * clang-format operates with the desired interface out of the
+                 * box. No action necessary.
+                 */
             }
             _ => {
                 todo!();
