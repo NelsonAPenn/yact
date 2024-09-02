@@ -1,5 +1,25 @@
-items = [
-    { pathspec = "**/*.rs", transformers = [ {RawCommand = "Rustfmt"} ]},
-    { pathspec = "**/*.md", transformers = [ {Builtin = "TrailingWhitespace" }]},
-    { pathspec = "*.md", transformers = [ {Builtin = "TrailingWhitespace"} ]}
-]
+[[items]]
+pathspec = "**/*.rs"
+
+[[items.transformers]]
+RawCommand = "Rustfmt"
+
+[[items]]
+pathspec = "**/*.md"
+
+[[items.transformers]]
+
+[items.transformers.RawCommand.System]
+command = "deno"
+env = {}
+args = ["fmt", "--ext", "md", "-"]
+
+[[items]]
+pathspec = "*.md"
+
+[[items.transformers]]
+
+[items.transformers.RawCommand.System]
+command = "deno"
+env = {}
+args = ["fmt", "--ext", "md", "-"]

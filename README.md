@@ -8,21 +8,25 @@ Enter the forbidden fruit of your development process.
 
 `yact` is focused on (in order):
 
-1. Seamlessly applying formatters with minimal disturbance to your workflow or git history (better than other solutions).
-    - Transparently transforms staged changes for commit
-    - Merges the resulting formatting changes back into working tree
-2. Using the first-party implementation (`libgit2`) whenever possible when working with git repositories.
+1. Seamlessly applying formatters with minimal disturbance to your workflow or
+   git history (better than other solutions).
+   - Transparently transforms staged changes for commit
+   - Merges the resulting formatting changes back into working tree
+2. Using the first-party implementation (`libgit2`) whenever possible when
+   working with git repositories.
 3. Performance
 4. Efficiency
 
-`yact` provides both a method for configuring what transformers to run on which files in a project as well as a method for integrating with other pre-commit management tools (like `pre-commit`).
+`yact` provides both a method for configuring what transformers to run on which
+files in a project as well as a method for integrating with other pre-commit
+management tools (like `pre-commit`).
 
 ## Requirements and installation
 
 - Requires libgit2
 - For the time being, build and install `yact` from source:
-    1. clone the repository and `cd` into it
-    2. `cargo install --path .`
+  1. clone the repository and `cd` into it
+  2. `cargo install --path .`
 
 ## Usage
 
@@ -37,7 +41,8 @@ items = [
 ]
 ```
 
-2. Update your pre-commit git hook to run yact. This can be as simple as placing the script below at `.git/hooks/pre-commit`
+2. Update your pre-commit git hook to run yact. This can be as simple as placing
+   the script below at `.git/hooks/pre-commit`
 
 ```sh
 #!/bin/sh
@@ -45,24 +50,35 @@ items = [
 yact
 ```
 
-> Note on pathspecs: at the present time, `pathspec` defined in the above items is a git pathspec, which differs subtly from shell globs. Importantly, `**` matches one or more directories rather than zero or more. Because of this, two separate rules are often required to be defined to match all the files of one filetype. This behavior may change in the future.
+> Note on pathspecs: at the present time, `pathspec` defined in the above items
+> is a git pathspec, which differs subtly from shell globs. Importantly, `**`
+> matches one or more directories rather than zero or more. Because of this, two
+> separate rules are often required to be defined to match all the files of one
+> filetype. This behavior may change in the future.
 
 ## Transformers
 
-`yact` defines a transformer as any process that applies some sort of formatting to a file. `yact` includes builtin transformers (written in native Rust) and transformers that invoke another process.
+`yact` defines a transformer as any process that applies some sort of formatting
+to a file. `yact` includes builtin transformers (written in native Rust) and
+transformers that invoke another process.
 
-The standard interface for transformers that are a separate process are a command that reads a source file in from stdin and writes the formatter version to stdout, returning a nonzero exit code if the operation failed.
+The standard interface for transformers that are a separate process are a
+command that reads a source file in from stdin and writes the formatter version
+to stdout, returning a nonzero exit code if the operation failed.
 
 `yact` has the following builtin transformers:
 
-- `TrailingWhitespace`: trims trailing whitespace and ensures the source file ends in a newline.
+- `TrailingWhitespace`: trims trailing whitespace and ensures the source file
+  ends in a newline.
 
-Additionally, `yact` has options for the following popular transformers (simply providing the correct command-line arguments to them):
+Additionally, `yact` has options for the following popular transformers (simply
+providing the correct command-line arguments to them):
 
 - `Rustfmt`
 - `ClangFormat`
 
-Finally, `yact` provides a catch-all `System` transformer where command, env, and args can be configured. Example below.
+Finally, `yact` provides a catch-all `System` transformer where command, env,
+and args can be configured. Example below.
 
 ```toml
 [[items]]
@@ -89,17 +105,22 @@ on you, and updating your working tree in the most correct way possible.
 
 ## Considerations
 
-`yact` will never bork your git history. However, `yact` will take liberty in modifying your working tree as it sees fit. This is done in a fairly safe manner, merging formatting changes back into your worktree but keeping the worktree's version in case of conflicts.
+`yact` will never bork your git history. However, `yact` will take liberty in
+modifying your working tree as it sees fit. This is done in a fairly safe
+manner, merging formatting changes back into your worktree but keeping the
+worktree's version in case of conflicts.
 
 ## How it works
 
-`yact` dives into git plumbing to manage staged changes as perfectly as it can. It uses bindings to `libgit2` to do things right.
+`yact` dives into git plumbing to manage staged changes as perfectly as it can.
+It uses bindings to `libgit2` to do things right.
 
 General flow:
 
-1. (If used as pre-commit hook management replacement) iterate diff and find the right transformer for each file.
+1. (If used as pre-commit hook management replacement) iterate diff and find the
+   right transformer for each file.
 2. Create new blob as transformation of staged blob
 3. Diff new blob and work tree.
 4. Merge diff into worktree.
-5. (If used as a pre-commit hook management replacement) create new tree and bump commit to point to new tree.
-
+5. (If used as a pre-commit hook management replacement) create new tree and
+   bump commit to point to new tree.
