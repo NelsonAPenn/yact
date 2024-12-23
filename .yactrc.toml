@@ -8,18 +8,10 @@ RawCommand = "Rustfmt"
 pathspec = "**/*.md"
 
 [[items.transformers]]
-
-[items.transformers.RawCommand.System]
-command = "deno"
-env = {}
-args = ["fmt", "--ext", "md", "-"]
+RawCommand = "DenoFmt"
 
 [[items]]
 pathspec = "*.md"
 
 [[items.transformers]]
-
-[items.transformers.RawCommand.System]
-command = "deno"
-env = {}
-args = ["fmt", "--ext", "md", "-"]
+RawCommand = "DenoFmt"
