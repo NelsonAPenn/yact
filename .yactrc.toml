@@ -1,12 +1,7 @@
 [[items]]
-pathspec = "**/*.rs"
+glob = "**/*.rs"
 transformers = [{External = "Rustfmt"}]
 
 [[items]]
-pathspec = "**/*.md"
+glob = "**/*.md"
 transformers = [{External = "DenoFmt"}]
-
-[[items]]
-pathspec = "*.md"
-transformers = [{External = "DenoFmt"}]
-

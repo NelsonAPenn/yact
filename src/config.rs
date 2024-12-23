@@ -30,7 +30,7 @@ impl TransformerOptions {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigurationItem {
-    pub pathspec: String,
+    pub glob: String,
     pub transformers: Vec<TransformerOptions>,
 }
 

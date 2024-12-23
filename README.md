@@ -35,9 +35,9 @@ management tools (like `pre-commit`).
 ```toml
 # Example .yactrc.toml
 items = [
-    { pathspec = "**/*.rs", transformers = [ {External = "Rustfmt"} ]},
-    { pathspec = "**/*.md", transformers = [ {Builtin = "TrailingWhitespace" }]},
-    { pathspec = "*.md", transformers = [ {Builtin = "TrailingWhitespace"} ]}
+    { glob = "**/*.rs", transformers = [ {External = "Rustfmt"} ]},
+    { glob = "**/*.md", transformers = [ {Builtin = "TrailingWhitespace" }]},
+    { glob = "*.md", transformers = [ {Builtin = "TrailingWhitespace"} ]}
 ]
 ```
 
@@ -49,12 +49,6 @@ items = [
 
 yact
 ```
-
-> Note on pathspecs: at the present time, `pathspec` defined in the above items
-> is a git pathspec, which differs subtly from shell globs. Importantly, `**`
-> matches one or more directories rather than zero or more. Because of this, two
-> separate rules are often required to be defined to match all the files of one
-> filetype. This behavior may change in the future.
 
 ## Transformers
 
@@ -85,7 +79,7 @@ and args can be configured. Example below.
 
 ```toml
 [[items]]
-pathspec = "**/*.rs"
+glob = "**/*.rs"
 transformers = [ { System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}]
 ```
 
