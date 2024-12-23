@@ -35,9 +35,13 @@ management tools (like `pre-commit`).
 ```toml
 # Example .yactrc.toml
 items = [
-    { glob = "**/*.rs", transformers = [ {External = "Rustfmt"} ]},
-    { glob = "**/*.md", transformers = [ {Builtin = "TrailingWhitespace" }]},
-    { glob = "*.md", transformers = [ {Builtin = "TrailingWhitespace"} ]}
+    { glob = "**/*.rs", transformers = [{External = "Rustfmt"}] },
+    { glob = "**/*.md", transformers = [{External = "DenoFmt" }] },
+    { glob = "**/*.cpp", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.hpp", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.h", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.c", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.txt", transformers = [{Builtin = "TrailingWhitespace"}] },
 ]
 ```
 
