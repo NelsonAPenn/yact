@@ -44,6 +44,10 @@ pub fn main() -> ExitCode {
             eprintln!("Could not resolve .yactrc.toml configuration file. Ensure it is located at the root of the repository");
             ExitCode::FAILURE
         }
+        Err(Error::InvalidGlob(glob)) => {
+            eprintln!("Invalid glob found in configuration: '{}'", glob);
+            ExitCode::FAILURE
+        }
         Ok(_) => ExitCode::SUCCESS,
     }
 }

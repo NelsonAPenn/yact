@@ -1,7 +1,8 @@
 use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
-    MergeOptions, Pathspec, Repository, Tree, TreeWalkMode, TreeWalkResult,
+    MergeOptions, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
+use glob::{MatchOptions, Pattern};
 use std::path::Path;
 
 mod builtin_transformers;
@@ -21,6 +22,7 @@ pub enum Error {
     ConfigurationNotFound,
     ConfigurationParseError(toml::de::Error),
     ConfigurationEncodingError(std::str::Utf8Error),
+    InvalidGlob(String),
     RepositoryIsBare,
 
     /// An error was returned from `libgit2`.
@@ -95,8 +97,14 @@ pub fn load_configuration(repository: &Repository) -> Result<Configuration, Erro
     let file =
         std::fs::read(path.join(".yactrc.toml")).map_err(|_| Error::ConfigurationNotFound)?;
     let config_str = std::str::from_utf8(&file)?;
+    let configuration: Configuration = toml::from_str(config_str)?;
+    for item in &configuration.items {
+        if Pattern::new(&item.glob).is_err() {
+            return Err(Error::InvalidGlob(item.glob.clone()));
+        }
+    }
 
-    Ok(toml::from_str(config_str)?)
+    Ok(configuration)
 }
 
 pub fn pre_commit<P: AsRef<Path>>(path: P) -> Result<(), Error> {
@@ -113,12 +121,15 @@ pub fn pre_commit<P: AsRef<Path>>(path: P) -> Result<(), Error> {
     for entry in diff.deltas() {
         if !entry.new_file().is_binary() {
             let matching_config_item = configuration.items.iter().find(|config_item| {
-                Pathspec::new([&config_item.pathspec])
-                    .unwrap()
-                    .matches_path(
-                        entry.new_file().path().unwrap(),
-                        git2::PathspecFlags::DEFAULT,
-                    )
+                let pattern = Pattern::new(&config_item.glob).unwrap();
+                pattern.matches_path_with(
+                    entry.new_file().path().unwrap(),
+                    MatchOptions {
+                        case_sensitive: true,
+                        require_literal_separator: true,
+                        require_literal_leading_dot: true,
+                    },
+                )
             });
             if matching_config_item.is_none() {
                 continue;

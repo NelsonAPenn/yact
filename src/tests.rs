@@ -11,7 +11,7 @@ use super::pre_commit;
 fn config() -> Configuration {
     Configuration {
         items: vec![ConfigurationItem {
-            pathspec: "*.md".to_string(),
+            glob: "*.md".to_string(),
             transformers: vec![TransformerOptions::Builtin(
                 BuiltinTransformer::TrailingWhitespace,
             )],
