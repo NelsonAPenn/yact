@@ -17,8 +17,8 @@ pub mod transformer {
     ///
     /// Example implementors might be a builtin trailing whitespace transformer,
     /// or shell transformer.
-    pub trait Transformer: Fn(&[u8]) -> Result<Vec<u8>, String> {}
-    impl<T> super::Transformer for T where T: Fn(&[u8]) -> Result<Vec<u8>, String> {}
+    pub trait Transformer: Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String> {}
+    impl<T> super::Transformer for T where T: Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String> {}
 
     /// Apply a transform to an existing blob, creating another (for example,
     /// applying linting)
@@ -26,11 +26,12 @@ pub mod transformer {
         repository: &Repository,
         blob: &Blob,
         transformer: T,
+        extension: Option<&str>,
     ) -> Result<Oid, crate::Error>
     where
         T: Transformer,
     {
-        let transformed = transformer(blob.content())?;
+        let transformed = transformer(blob.content(), extension)?;
         Ok(repository.blob(transformed.as_slice())?)
     }
 
@@ -40,11 +41,13 @@ pub mod transformer {
         repository: &Repository,
         blob: &Blob,
         transformers: &[Box<dyn Transformer>],
+        extension: Option<&str>,
     ) -> Result<Oid, crate::Error> {
         let mut transformer_iter = transformers.iter();
-        let mut transformed = transformer_iter.next().expect("at least one item")(blob.content())?;
+        let mut transformed =
+            transformer_iter.next().expect("at least one item")(blob.content(), extension)?;
         for transformer in transformer_iter {
-            transformed = transformer(transformed.as_slice())?;
+            transformed = transformer(transformed.as_slice(), extension)?;
         }
 
         Ok(repository.blob(transformed.as_slice())?)
@@ -52,11 +55,11 @@ pub mod transformer {
 
     /// create a shell transformer from a command with process and arguments
     /// configured.
-    pub fn create_shell_transformer<T: Fn() -> std::process::Command>(
+    pub fn create_shell_transformer<T: Fn(Option<&str>) -> std::process::Command>(
         command_getter: T,
     ) -> impl Transformer {
-        move |data: &[u8]| {
-            let mut child = command_getter()
+        move |data: &[u8], extension: Option<&str>| {
+            let mut child = command_getter(extension)
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .spawn()
@@ -80,7 +83,10 @@ pub mod transformer {
     }
 
     pub mod transformers {
-        pub fn trailing_whitespace(data: &[u8]) -> Result<Vec<u8>, String> {
+        pub fn trailing_whitespace(
+            data: &[u8],
+            _extension: Option<&str>,
+        ) -> Result<Vec<u8>, String> {
             let str_data = std::str::from_utf8(data).map_err(|err| format!("{:?}", err))?;
             let mut out = String::with_capacity(data.len());
             for line in str_data.lines() {
@@ -209,10 +215,17 @@ pub fn pre_commit<P: AsRef<Path>>(path: P) -> Result<(), Error> {
                 "Transforming staged file: {}",
                 entry.new_file().path().unwrap().to_str().unwrap()
             );
+            let extension = entry
+                .new_file()
+                .path()
+                .unwrap()
+                .extension()
+                .and_then(|x| x.to_str());
             let oid = transformer::apply_transform_pipeline(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
                 &transformers,
+                extension,
             )?;
             transformed_tree_builder.upsert(
                 entry.new_file().path_bytes().unwrap(),
@@ -278,6 +291,7 @@ pub enum ShellCommandTransformer {
         env: HashMap<String, String>,
         args: Vec<String>,
     },
+    DenoFmt,
     /*
      * TODO: support
      *
@@ -292,10 +306,11 @@ impl ShellCommandTransformer {
             Self::Rustfmt => "rustfmt",
             Self::ClangFormat => "clang-format",
             Self::System { command, .. } => command.as_str(),
+            Self::DenoFmt => "deno",
         }
     }
 
-    pub fn configure_command(&self, command: &mut std::process::Command) {
+    pub fn configure_command(&self, command: &mut std::process::Command, extension: Option<&str>) {
         match self {
             Self::Rustfmt => {
                 command.args(["--emit", "stdout"]);
@@ -305,10 +320,15 @@ impl ShellCommandTransformer {
                 command.args(args);
             }
             Self::ClangFormat => {
-                /*
-                 * clang-format operates with the desired interface out of the
-                 * box. No action necessary.
-                 */
+                if let Some(extension) = extension {
+                    command.args(["--assume-filename", &format!("example.{}", extension)]);
+                }
+            }
+            Self::DenoFmt => {
+                if let Some(extension) = extension {
+                    command.args(["fmt", "--ext", extension]);
+                }
+                command.arg("-");
             }
         }
     }
@@ -328,9 +348,9 @@ impl TransformerOptions {
             }
             Self::RawCommand(command_type) => {
                 let command_type = command_type.clone();
-                Box::new(create_shell_transformer(move || {
+                Box::new(create_shell_transformer(move |extension: Option<&str>| {
                     let mut command = std::process::Command::new(command_type.command_str());
-                    command_type.configure_command(&mut command);
+                    command_type.configure_command(&mut command, extension);
                     command
                 }))
             }
