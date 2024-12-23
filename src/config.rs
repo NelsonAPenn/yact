@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TransformerOptions {
     Builtin(BuiltinTransformer),
-    RawCommand(ShellCommandTransformer),
+    External(ShellCommandTransformer),
 }
 
 impl TransformerOptions {
@@ -16,7 +16,7 @@ impl TransformerOptions {
             Self::Builtin(BuiltinTransformer::TrailingWhitespace) => {
                 Box::new(builtin_transformers::trailing_whitespace)
             }
-            Self::RawCommand(command_type) => {
+            Self::External(command_type) => {
                 let command_type = command_type.clone();
                 Box::new(create_shell_transformer(move |extension: Option<&str>| {
                     let mut command = std::process::Command::new(command_type.command_str());

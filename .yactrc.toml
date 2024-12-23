@@ -2,16 +2,16 @@
 pathspec = "**/*.rs"
 
 [[items.transformers]]
-RawCommand = "Rustfmt"
+External = "Rustfmt"
 
 [[items]]
 pathspec = "**/*.md"
 
 [[items.transformers]]
-RawCommand = "DenoFmt"
+External = "DenoFmt"
 
 [[items]]
 pathspec = "*.md"
 
 [[items.transformers]]
-RawCommand = "DenoFmt"
+External = "DenoFmt"
