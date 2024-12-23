@@ -49,13 +49,12 @@ items = [
 ]
 ```
 
-2. Update your pre-commit git hook to run yact. This can be as simple as placing
-   the script below at `.git/hooks/pre-commit`
+2. Update your pre-commit git hook to run yact. For example, on Unix systems,
+   run the following command from the root of the repository you'd like to use
+   yact in.
 
 ```sh
-#!/bin/sh
-
-yact
+ln -s "$(which yact)" .git/hooks/pre-commit
 ```
 
 ## Transformers
