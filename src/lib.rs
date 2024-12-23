@@ -5,6 +5,9 @@ use git2::{
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::Path};
 pub use transformer::{create_shell_transformer, transform, Transformer};
+mod config;
+pub use config::{Configuration, ConfigurationItem};
+
 #[cfg(test)]
 mod tests;
 
@@ -336,15 +339,4 @@ impl TransformerOptions {
             }
         }
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ConfigurationItem {
-    pub pathspec: String,
-    pub transformers: Vec<TransformerOptions>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Configuration {
-    items: Vec<ConfigurationItem>,
 }
