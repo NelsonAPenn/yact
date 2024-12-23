@@ -44,8 +44,9 @@ impl ShellCommandTransformer {
                 }
             }
             Self::DenoFmt => {
+                command.arg("fmt");
                 if let Some(extension) = extension {
-                    command.args(["fmt", "--ext", extension]);
+                    command.args(["--ext", extension]);
                 }
                 command.arg("-");
             }
