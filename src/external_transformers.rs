@@ -10,6 +10,7 @@ pub enum ShellCommandTransformer {
         env: HashMap<String, String>,
         args: Vec<String>,
     },
+    DenoFmt,
     /*
      * TODO: support
      *
@@ -24,10 +25,11 @@ impl ShellCommandTransformer {
             Self::Rustfmt => "rustfmt",
             Self::ClangFormat => "clang-format",
             Self::System { command, .. } => command.as_str(),
+            Self::DenoFmt => "deno",
         }
     }
 
-    pub fn configure_command(&self, command: &mut std::process::Command) {
+    pub fn configure_command(&self, command: &mut std::process::Command, extension: Option<&str>) {
         match self {
             Self::Rustfmt => {
                 command.args(["--emit", "stdout"]);
@@ -37,10 +39,15 @@ impl ShellCommandTransformer {
                 command.args(args);
             }
             Self::ClangFormat => {
-                /*
-                 * clang-format operates with the desired interface out of the
-                 * box. No action necessary.
-                 */
+                if let Some(extension) = extension {
+                    command.args(["--assume-filename", &format!("example.{}", extension)]);
+                }
+            }
+            Self::DenoFmt => {
+                if let Some(extension) = extension {
+                    command.args(["fmt", "--ext", extension]);
+                }
+                command.arg("-");
             }
         }
     }

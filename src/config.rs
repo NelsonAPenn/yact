@@ -18,9 +18,9 @@ impl TransformerOptions {
             }
             Self::RawCommand(command_type) => {
                 let command_type = command_type.clone();
-                Box::new(create_shell_transformer(move || {
+                Box::new(create_shell_transformer(move |extension: Option<&str>| {
                     let mut command = std::process::Command::new(command_type.command_str());
-                    command_type.configure_command(&mut command);
+                    command_type.configure_command(&mut command, extension);
                     command
                 }))
             }

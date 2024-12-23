@@ -6,8 +6,8 @@ use std::process::Stdio;
 ///
 /// Example implementors might be a builtin trailing whitespace transformer,
 /// or shell transformer.
-pub trait Transformer: Fn(&[u8]) -> Result<Vec<u8>, String> {}
-impl<T> super::Transformer for T where T: Fn(&[u8]) -> Result<Vec<u8>, String> {}
+pub trait Transformer: Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String> {}
+impl<T> super::Transformer for T where T: Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String> {}
 
 /// Apply a transform to an existing blob, creating another (for example,
 /// applying linting)
@@ -15,11 +15,12 @@ pub fn transform<T>(
     repository: &Repository,
     blob: &Blob,
     transformer: T,
+    extension: Option<&str>,
 ) -> Result<Oid, crate::Error>
 where
     T: Transformer,
 {
-    let transformed = transformer(blob.content())?;
+    let transformed = transformer(blob.content(), extension)?;
     Ok(repository.blob(transformed.as_slice())?)
 }
 
@@ -29,11 +30,13 @@ pub fn apply_transform_pipeline(
     repository: &Repository,
     blob: &Blob,
     transformers: &[Box<dyn Transformer>],
+    extension: Option<&str>,
 ) -> Result<Oid, crate::Error> {
     let mut transformer_iter = transformers.iter();
-    let mut transformed = transformer_iter.next().expect("at least one item")(blob.content())?;
+    let mut transformed =
+        transformer_iter.next().expect("at least one item")(blob.content(), extension)?;
     for transformer in transformer_iter {
-        transformed = transformer(transformed.as_slice())?;
+        transformed = transformer(transformed.as_slice(), extension)?;
     }
 
     Ok(repository.blob(transformed.as_slice())?)
@@ -41,11 +44,11 @@ pub fn apply_transform_pipeline(
 
 /// create a shell transformer from a command with process and arguments
 /// configured.
-pub fn create_shell_transformer<T: Fn() -> std::process::Command>(
+pub fn create_shell_transformer<T: Fn(Option<&str>) -> std::process::Command>(
     command_getter: T,
 ) -> impl Transformer {
-    move |data: &[u8]| {
-        let mut child = command_getter()
+    move |data: &[u8], extension: Option<&str>| {
+        let mut child = command_getter(extension)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()

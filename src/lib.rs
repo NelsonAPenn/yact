@@ -134,10 +134,17 @@ pub fn pre_commit<P: AsRef<Path>>(path: P) -> Result<(), Error> {
                 "Transforming staged file: {}",
                 entry.new_file().path().unwrap().to_str().unwrap()
             );
+            let extension = entry
+                .new_file()
+                .path()
+                .unwrap()
+                .extension()
+                .and_then(|x| x.to_str());
             let oid = transformer::apply_transform_pipeline(
                 &repository,
                 &repository.find_blob(entry.new_file().id())?,
                 &transformers,
+                extension,
             )?;
             transformed_tree_builder.upsert(
                 entry.new_file().path_bytes().unwrap(),
