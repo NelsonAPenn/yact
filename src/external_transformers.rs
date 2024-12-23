@@ -12,11 +12,7 @@ pub enum ShellCommandTransformer {
     },
     DenoFmt,
     Prettier,
-    /*
-     * TODO: support
-     *
-     * - ruff
-     */
+    RuffFormat,
 }
 
 impl ShellCommandTransformer {
@@ -27,6 +23,7 @@ impl ShellCommandTransformer {
             Self::System { command, .. } => command.as_str(),
             Self::DenoFmt => "deno",
             Self::Prettier => "prettier",
+            Self::RuffFormat => "ruff",
         }
     }
 
@@ -55,6 +52,13 @@ impl ShellCommandTransformer {
                 if let Some(extension) = extension {
                     command.args(["--stdin-filepath", &format!("example.{}", extension)]);
                 }
+            }
+            Self::RuffFormat => {
+                command.arg("format");
+                if let Some(extension) = extension {
+                    command.args(["--stdin-filename", &format!("example.{}", extension)]);
+                }
+                command.args(["--quiet", "-"]);
             }
         }
     }
