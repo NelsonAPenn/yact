@@ -77,6 +77,7 @@ providing the correct command-line arguments to them):
 - `Rustfmt`
 - `ClangFormat`
 - `DenoFmt`
+- `Prettier`
 - `RuffFormat`
 
 Finally, `yact` provides a catch-all `System` transformer where command, env,
