@@ -11,10 +11,10 @@ pub enum ShellCommandTransformer {
         args: Vec<String>,
     },
     DenoFmt,
+    Prettier,
     /*
      * TODO: support
      *
-     * - prettier
      * - ruff
      */
 }
@@ -26,6 +26,7 @@ impl ShellCommandTransformer {
             Self::ClangFormat => "clang-format",
             Self::System { command, .. } => command.as_str(),
             Self::DenoFmt => "deno",
+            Self::Prettier => "prettier",
         }
     }
 
@@ -49,6 +50,11 @@ impl ShellCommandTransformer {
                     command.args(["--ext", extension]);
                 }
                 command.arg("-");
+            }
+            Self::Prettier => {
+                if let Some(extension) = extension {
+                    command.args(["--stdin-filepath", &format!("example.{}", extension)]);
+                }
             }
         }
     }
