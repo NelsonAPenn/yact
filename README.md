@@ -35,7 +35,7 @@ management tools (like `pre-commit`).
 ```toml
 # Example .yactrc.toml
 items = [
-    { pathspec = "**/*.rs", transformers = [ {RawCommand = "Rustfmt"} ]},
+    { pathspec = "**/*.rs", transformers = [ {External = "Rustfmt"} ]},
     { pathspec = "**/*.md", transformers = [ {Builtin = "TrailingWhitespace" }]},
     { pathspec = "*.md", transformers = [ {Builtin = "TrailingWhitespace"} ]}
 ]
