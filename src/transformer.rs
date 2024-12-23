@@ -32,14 +32,17 @@ pub fn apply_transform_pipeline(
     transformers: &[Box<dyn Transformer>],
     extension: Option<&str>,
 ) -> Result<Oid, crate::Error> {
-    let mut transformer_iter = transformers.iter();
-    let mut transformed =
-        transformer_iter.next().expect("at least one item")(blob.content(), extension)?;
-    for transformer in transformer_iter {
-        transformed = transformer(transformed.as_slice(), extension)?;
-    }
+    if transformers.is_empty() {
+        Ok(blob.id())
+    } else {
+        let mut transformer_iter = transformers.iter();
+        let mut transformed = transformer_iter.next().unwrap()(blob.content(), extension)?;
+        for transformer in transformer_iter {
+            transformed = transformer(transformed.as_slice(), extension)?;
+        }
 
-    Ok(repository.blob(transformed.as_slice())?)
+        Ok(repository.blob(transformed.as_slice())?)
+    }
 }
 
 /// create a shell transformer from a command with process and arguments
