@@ -41,6 +41,10 @@ items = [
     { glob = "**/*.hpp", transformers = [{External = "ClangFormat"}] },
     { glob = "**/*.h", transformers = [{External = "ClangFormat"}] },
     { glob = "**/*.c", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.js", transformers = [{External = "Prettier"}] },
+    { glob = "**/*.ts", transformers = [{External = "Prettier"}] },
+    { glob = "**/*.py", transformers = [{External = "RuffFormat"}] },
+    { glob = "**/*.pyi", transformers = [{External = "RuffFormat"}] },
     { glob = "**/*.txt", transformers = [{Builtin = "TrailingWhitespace"}] },
 ]
 ```
