@@ -1,17 +1,12 @@
 [[items]]
 pathspec = "**/*.rs"
-
-[[items.transformers]]
-External = "Rustfmt"
+transformers = [{External = "Rustfmt"}]
 
 [[items]]
 pathspec = "**/*.md"
-
-[[items.transformers]]
-External = "DenoFmt"
+transformers = [{External = "DenoFmt"}]
 
 [[items]]
 pathspec = "*.md"
+transformers = [{External = "DenoFmt"}]
 
-[[items.transformers]]
-External = "DenoFmt"
