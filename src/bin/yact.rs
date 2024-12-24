@@ -18,7 +18,8 @@
  */
 use std::{path::PathBuf, process::ExitCode};
 
-use clap::Parser;
+use clap::{crate_version, Parser};
+use semver::Version;
 use yact::{pre_commit, Error};
 
 #[derive(Parser)]
@@ -30,7 +31,9 @@ pub struct Args {
 
 pub fn main() -> ExitCode {
     let args = Args::parse();
-    match pre_commit(args.path.unwrap_or(PathBuf::from("."))) {
+    let version = Version::parse(crate_version!()).ok();
+
+    match pre_commit(args.path.unwrap_or(PathBuf::from(".")), version) {
         Err(Error::EmptyIndex) => {
             eprintln!("Aborting commit. No staged changes or they were formatted away.");
             ExitCode::FAILURE
@@ -44,6 +47,10 @@ pub fn main() -> ExitCode {
         }
         Err(Error::RepositoryNotFound) => {
             eprintln!("Repository not found in current or parent directories. yact must be run from within a git repository.");
+            ExitCode::FAILURE
+        }
+        Err(Error::InvalidYactVersion(requirement, version)) => {
+            eprintln!("Repository is configured to require yact version {}, but current version is {}. Please install an appropriate version or update the requirement.", requirement, version);
             ExitCode::FAILURE
         }
         Err(Error::GitError(err)) => {

@@ -18,12 +18,14 @@
  */
 
 use git2::{ErrorClass, ErrorCode};
+use semver::{Version, VersionReq};
 
 #[derive(Debug)]
 pub enum Error {
     ConfigurationNotFound,
     ConfigurationParseError(toml::de::Error),
     ConfigurationEncodingError(std::str::Utf8Error),
+    InvalidYactVersion(VersionReq, Version),
     InvalidGlob(String),
     RepositoryNotFound,
     RepositoryIsBare,

@@ -22,6 +22,7 @@ use crate::{
 };
 use git2::Repository;
 use glob::Pattern;
+use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -56,6 +57,7 @@ pub struct ConfigurationItem {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Configuration {
+    pub requires_yact_version: Option<VersionReq>,
     pub items: Vec<ConfigurationItem>,
 }
 

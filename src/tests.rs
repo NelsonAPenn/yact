@@ -28,6 +28,7 @@ use super::pre_commit;
 
 fn config() -> Configuration {
     Configuration {
+        requires_yact_version: None,
         items: vec![ConfigurationItem {
             glob: "*.md".to_string(),
             transformers: vec![TransformerOptions::Builtin(
@@ -81,7 +82,7 @@ fn basic_operation_works() {
     index.add_path(readme_path).unwrap();
     index.write().unwrap();
 
-    let pre_commit_result = pre_commit(repo_path.as_path());
+    let pre_commit_result = pre_commit(repo_path.as_path(), None);
     assert!(matches!(pre_commit_result, Err(crate::Error::EmptyIndex)));
     /*
      * After pre-commit runs, commit the index
@@ -136,7 +137,7 @@ fn conflict_handled_correctly() {
      */
     std::fs::write(repo_path.join("README.md"), "# Blab").unwrap();
 
-    let pre_commit_result = pre_commit(repo_path.as_path());
+    let pre_commit_result = pre_commit(repo_path.as_path(), None);
     assert!(matches!(pre_commit_result, Err(crate::Error::EmptyIndex)));
 
     /*
