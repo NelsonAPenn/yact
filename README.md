@@ -23,7 +23,8 @@ management tools (like `pre-commit`).
 
 ## Requirements and installation
 
-- Requires libgit2
+- This crate depends on [libgit2](https://libgit2.org/), but this should be
+  built automatically if it is not installed on the target system.
 - For the time being, build and install `yact` from source:
   1. [Install Rust](https://www.rust-lang.org/tools/install)
   2. `cargo install --git https://github.com/NelsonAPenn/yact --bin yact`
