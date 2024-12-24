@@ -24,5 +24,7 @@ toml = "0.8.19"
 default = ["cli"]
 cli = ["clap"]
 
-[dev-dependencies]
-uuid = { version = "1.10.0", features = ["v4"] }
+# Used for creating temporary directories in unit tests
+[dev-dependencies.uuid]
+version = "1.10.0"
+features = ["v4"]
