@@ -59,7 +59,7 @@ pub fn main() -> ExitCode {
             ExitCode::FAILURE
         }
         Err(Error::ConfigurationNotFound) => {
-            eprintln!("Could not resolve .yactrc.toml configuration file. Ensure it is located at the root of the repository");
+            eprintln!("Could not resolve yactrc.toml configuration file. Ensure it is located at the root of the repository");
             ExitCode::FAILURE
         }
         Err(Error::InvalidGlob(glob)) => {

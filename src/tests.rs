@@ -48,13 +48,11 @@ fn fresh_repo() -> (Repository, PathBuf) {
     std::fs::write(repo_path.join("README.md"), "# Blah\n").unwrap();
     index.add_path(std::path::Path::new("README.md")).unwrap();
     std::fs::write(
-        repo_path.join(".yactrc.toml"),
+        repo_path.join("yactrc.toml"),
         toml::to_string_pretty(&config()).unwrap(),
     )
     .unwrap();
-    index
-        .add_path(std::path::Path::new(".yactrc.toml"))
-        .unwrap();
+    index.add_path(std::path::Path::new("yactrc.toml")).unwrap();
     let tree = repo.find_tree(index.write_tree().unwrap()).unwrap();
     repo.commit(
         Some("HEAD"),

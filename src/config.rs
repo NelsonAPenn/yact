@@ -62,8 +62,7 @@ pub struct Configuration {
 pub fn load_configuration(repository: &Repository) -> Result<Configuration, Error> {
     let path = repository.workdir().ok_or(Error::RepositoryIsBare)?;
 
-    let file =
-        std::fs::read(path.join(".yactrc.toml")).map_err(|_| Error::ConfigurationNotFound)?;
+    let file = std::fs::read(path.join("yactrc.toml")).map_err(|_| Error::ConfigurationNotFound)?;
     let config_str = std::str::from_utf8(&file)?;
     let configuration: Configuration = toml::from_str(config_str)?;
     for item in &configuration.items {

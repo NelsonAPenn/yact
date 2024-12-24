@@ -33,10 +33,10 @@ management tools (like `pre-commit`).
 
 ## Usage
 
-1. Create a config file named `.yactrc.toml` in the workspace root.
+1. Create a config file named `yactrc.toml` in the workspace root.
 
 ```toml
-# Example .yactrc.toml
+# Example yactrc.toml
 items = [
     { glob = "**/*.rs", transformers = [{External = "Rustfmt"}] },
     { glob = "**/*.md", transformers = [{External = "DenoFmt" }] },
