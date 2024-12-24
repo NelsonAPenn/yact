@@ -22,6 +22,7 @@ use git2::{
     MergeOptions, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
 use glob::{MatchOptions, Pattern};
+use semver::Version;
 use std::path::Path;
 
 fn build_worktree_slice<'repo>(
@@ -58,9 +59,21 @@ fn build_worktree_slice<'repo>(
 /// merge results back into worktree.
 ///
 /// This is the core algorithm provided by this project.
-pub fn pre_commit<P: AsRef<Path>>(path: P) -> Result<(), Error> {
+pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Result<(), Error> {
     let repository = Repository::discover(path)?;
     let configuration = load_configuration(&repository)?;
+
+    if let Some(ref version) = check_version {
+        if let Some(version_requirement) = configuration.requires_yact_version {
+            if !version_requirement.matches(version) {
+                return Err(Error::InvalidYactVersion(
+                    version_requirement.clone(),
+                    version.clone(),
+                ));
+            }
+        }
+    }
+
     let mut index = repository.index()?;
     let index_tree = repository.find_tree(index.write_tree()?)?;
     let last_committed_tree = repository.head()?.peel_to_tree()?;
