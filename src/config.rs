@@ -17,9 +17,11 @@
  * Yet Another Commit Transformer. If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::{
-    builtin_transformers, create_shell_transformer, BuiltinTransformer, ShellCommandTransformer,
-    Transformer,
+    builtin_transformers, create_shell_transformer, BuiltinTransformer, Error,
+    ShellCommandTransformer, Transformer,
 };
+use git2::Repository;
+use glob::Pattern;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -55,4 +57,20 @@ pub struct ConfigurationItem {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Configuration {
     pub items: Vec<ConfigurationItem>,
+}
+
+pub fn load_configuration(repository: &Repository) -> Result<Configuration, Error> {
+    let path = repository.workdir().ok_or(Error::RepositoryIsBare)?;
+
+    let file =
+        std::fs::read(path.join(".yactrc.toml")).map_err(|_| Error::ConfigurationNotFound)?;
+    let config_str = std::str::from_utf8(&file)?;
+    let configuration: Configuration = toml::from_str(config_str)?;
+    for item in &configuration.items {
+        if Pattern::new(&item.glob).is_err() {
+            return Err(Error::InvalidGlob(item.glob.clone()));
+        }
+    }
+
+    Ok(configuration)
 }

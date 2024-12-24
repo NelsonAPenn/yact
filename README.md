@@ -26,7 +26,7 @@ management tools (like `pre-commit`).
 - Requires libgit2
 - For the time being, build and install `yact` from source:
   1. Install Rust / cargo
-  2. `cargo install --git https://github.com/NelsonAPenn/yact`
+  2. `cargo install --git https://github.com/NelsonAPenn/yact --bin yact`
 
 ## Usage
 
