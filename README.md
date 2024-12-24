@@ -27,6 +27,8 @@ management tools (like `pre-commit`).
 - For the time being, build and install `yact` from source:
   1. Install Rust / cargo
   2. `cargo install --git https://github.com/NelsonAPenn/yact --bin yact`
+- `yact` does not install formatting tools for you. This does require that any
+  desired external formatters be installed and on the system path.
 
 ## Usage
 
