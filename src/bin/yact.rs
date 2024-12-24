@@ -42,6 +42,10 @@ pub fn main() -> ExitCode {
             );
             ExitCode::FAILURE
         }
+        Err(Error::RepositoryNotFound) => {
+            eprintln!("Repository not found in current or parent directories. yact must be run from within a git repository.");
+            ExitCode::FAILURE
+        }
         Err(Error::GitError(err)) => {
             eprintln!("Unexpected git error: {}", err);
             ExitCode::FAILURE

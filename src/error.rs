@@ -17,12 +17,15 @@
  * Yet Another Commit Transformer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use git2::{ErrorClass, ErrorCode};
+
 #[derive(Debug)]
 pub enum Error {
     ConfigurationNotFound,
     ConfigurationParseError(toml::de::Error),
     ConfigurationEncodingError(std::str::Utf8Error),
     InvalidGlob(String),
+    RepositoryNotFound,
     RepositoryIsBare,
 
     /// An error was returned from `libgit2`.
@@ -45,7 +48,13 @@ impl From<toml::de::Error> for Error {
 
 impl From<git2::Error> for Error {
     fn from(err: git2::Error) -> Self {
-        Self::GitError(err)
+        if matches!(err.class(), ErrorClass::Repository)
+            && matches!(err.code(), ErrorCode::NotFound)
+        {
+            Self::RepositoryNotFound
+        } else {
+            Self::GitError(err)
+        }
     }
 }
 
