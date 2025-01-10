@@ -88,7 +88,12 @@ impl ShellCommandTransformer {
                     }
                     Some(JavascriptPackageManagerType::Yarn) => {
                         let mut command = Command::new("yarn");
-                        command.args(["run", "prettier"]);
+                        /*
+                         * "silent" option is required because otherwise yarn
+                         * will print to stdout, ultimately ending up in the
+                         * formatted file contents.
+                         */
+                        command.args(["run", "-s", "prettier"]);
                         command
                     }
                     None => Command::new("prettier"),
