@@ -23,7 +23,6 @@ use std::{collections::HashMap, path::PathBuf, process::Command};
 pub enum JavascriptPackageManagerType {
     Node,
     Yarn,
-    YarnPlugNPlay,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,9 +81,16 @@ impl ShellCommandTransformer {
                 package_manager_type,
             } => {
                 let mut command = match package_manager_type {
-                    Some(JavascriptPackageManagerType::Node)
-                    | Some(JavascriptPackageManagerType::Yarn) => todo!(),
-                    Some(JavascriptPackageManagerType::YarnPlugNPlay) => todo!(),
+                    Some(JavascriptPackageManagerType::Node) => {
+                        let mut command = Command::new("npx");
+                        command.arg("prettier");
+                        command
+                    }
+                    Some(JavascriptPackageManagerType::Yarn) => {
+                        let mut command = Command::new("yarn");
+                        command.args(["run", "prettier"]);
+                        command
+                    }
                     None => Command::new("prettier"),
                 };
                 if let Some(extension) = extension {
