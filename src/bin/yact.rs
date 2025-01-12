@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024 Nelson Penn
+ * Copyright 2023, 2024, 2025 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -55,6 +55,10 @@ pub fn main() -> ExitCode {
         }
         Err(Error::GitError(err)) => {
             eprintln!("Unexpected git error: {}", err);
+            ExitCode::FAILURE
+        }
+        Err(Error::IoError(err)) => {
+            eprintln!("Unexpected IO error: {}", err);
             ExitCode::FAILURE
         }
         Err(Error::ConfigurationParseError(err)) => {

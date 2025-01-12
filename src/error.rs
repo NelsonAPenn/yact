@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024 Nelson Penn
+ * Copyright 2023, 2024, 2025 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -36,6 +36,9 @@ pub enum Error {
     /// One of the transformers encountered an error.
     TransformerError(String),
 
+    /// Unexpected std::io::Error
+    IoError(std::io::Error),
+
     /// No other errors, but the resulting index was empty.
     ///
     /// The commit should be aborted.
@@ -57,6 +60,12 @@ impl From<git2::Error> for Error {
         } else {
             Self::GitError(err)
         }
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Self::IoError(value)
     }
 }
 
