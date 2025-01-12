@@ -94,6 +94,17 @@ items = [
 ]
 ```
 
+```toml
+# Example yactrc.toml for Go programmers
+[[items]]
+glob = "**/*.go"
+transformers = [{ External = "Gofmt" }]
+
+[[items]]
+glob = "**/*.md"
+transformers = [{ Builtin = "TrailingWhitespace" }]
+```
+
 2. Update your pre-commit git hook to run yact. For example, on Unix systems,
    run the following command from the root of the repository you'd like to use
    yact in.
@@ -125,6 +136,7 @@ providing the correct command-line arguments to them):
 - `DenoFmt`
 - `Prettier`
 - `RuffFormat`
+- `Gofmt`
 
 Finally, `yact` provides a catch-all `System` transformer where command, env,
 and args can be configured. Example below.
