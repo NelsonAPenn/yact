@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024 Nelson Penn
+ * Copyright 2023, 2024, 2025 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -17,7 +17,11 @@
  * Yet Another Commit Transformer. If not, see <https://www.gnu.org/licenses/>.
  */
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf, process::Command};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum JavascriptPackageManagerType {
@@ -44,7 +48,11 @@ pub enum ShellCommandTransformer {
 }
 
 impl ShellCommandTransformer {
-    pub fn get_command(&self, extension: Option<&str>) -> Command {
+    pub fn get_command<P: AsRef<Path>>(
+        &self,
+        repository_path: P,
+        extension: Option<&str>,
+    ) -> Command {
         /*
          * TODO: paths should be relative to repository root, need repository
          * root path to configure command.
@@ -105,8 +113,17 @@ impl ShellCommandTransformer {
             }
             Self::RuffFormat { venv_path } => {
                 let mut command = match venv_path {
-                    Some(path) => {
-                        let python_path = path.join("bin").join("python");
+                    Some(venv_path) => {
+                        /*
+                         * This works even if path is absolute as join will
+                         * replace the original path with the absolute one.
+                         */
+                        let python_path = repository_path
+                            .as_ref()
+                            .join(venv_path)
+                            .join("bin")
+                            .join("python");
+
                         let mut command = Command::new(python_path);
                         command.args(["-m", "ruff"]);
                         command
