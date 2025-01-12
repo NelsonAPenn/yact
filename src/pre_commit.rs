@@ -62,6 +62,7 @@ fn build_worktree_slice<'repo>(
 pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Result<(), Error> {
     let repository = Repository::discover(path)?;
     let repository_path = repository.workdir().ok_or(Error::RepositoryIsBare)?;
+    std::env::set_current_dir(repository_path)?;
     let configuration = load_configuration(&repository)?;
 
     if let Some(ref version) = check_version {
