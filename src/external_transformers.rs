@@ -32,6 +32,7 @@ pub enum JavascriptPackageManagerType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShellCommandTransformer {
     Rustfmt,
+    Gofmt,
     ClangFormat,
     System {
         command: String,
@@ -63,6 +64,7 @@ impl ShellCommandTransformer {
                 command.args(["--emit", "stdout"]);
                 command
             }
+            Self::Gofmt => Command::new("gofmt"),
             Self::ClangFormat => {
                 let mut command = Command::new("clang-format");
                 if let Some(extension) = extension {
