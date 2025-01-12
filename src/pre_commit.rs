@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024 Nelson Penn
+ * Copyright 2023, 2024, 2025 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -61,6 +61,7 @@ fn build_worktree_slice<'repo>(
 /// This is the core algorithm provided by this project.
 pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Result<(), Error> {
     let repository = Repository::discover(path)?;
+    let repository_path = repository.workdir().ok_or(Error::RepositoryIsBare)?;
     let configuration = load_configuration(&repository)?;
 
     if let Some(ref version) = check_version {
@@ -102,7 +103,7 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
                 .unwrap()
                 .transformers
                 .iter()
-                .map(|x| x.transformer())
+                .map(|x| x.transformer(repository_path))
                 .collect::<Vec<_>>();
 
             eprintln!(

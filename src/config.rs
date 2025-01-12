@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024 Nelson Penn
+ * Copyright 2023, 2024, 2025 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -24,6 +24,7 @@ use git2::Repository;
 use glob::Pattern;
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TransformerOptions {
@@ -32,15 +33,16 @@ pub enum TransformerOptions {
 }
 
 impl TransformerOptions {
-    pub fn transformer(&self) -> Box<dyn Transformer> {
+    pub fn transformer(&self, repository_path: &Path) -> Box<dyn Transformer> {
         match self {
             Self::Builtin(BuiltinTransformer::TrailingWhitespace) => {
                 Box::new(builtin_transformers::trailing_whitespace)
             }
             Self::External(command_type) => {
                 let command_type = command_type.clone();
+                let repository_path = repository_path.to_path_buf();
                 Box::new(create_shell_transformer(move |extension: Option<&str>| {
-                    command_type.get_command(extension)
+                    command_type.get_command(&repository_path, extension)
                 }))
             }
         }
