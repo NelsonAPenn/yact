@@ -33,22 +33,64 @@ management tools (like `pre-commit`).
 
 ## Usage
 
-1. Create a config file named `yactrc.toml` in the workspace root.
+1. Create a config file named `yactrc.toml` in the workspace root. Below are
+   some example config files that will apply to most people. Note that the
+   configuration file is dependent on what languages and formatters your team
+   prefers, so these may require modification.
 
 ```toml
-# Example yactrc.toml
+# Example yactrc.toml for Rust programmers
+[[items]]
+glob = "**/*.rs"
+transformers = [{ External = "Rustfmt" }]
+
+[[items]]
+glob = "**/*.md"
+transformers = [{ Builtin = "TrailingWhitespace" }]
+```
+
+```toml
+# Example yactrc.toml for C / C++ programmers
 items = [
-    { glob = "**/*.rs", transformers = [{External = "Rustfmt"}] },
-    { glob = "**/*.md", transformers = [{External = "DenoFmt" }] },
     { glob = "**/*.cpp", transformers = [{External = "ClangFormat"}] },
     { glob = "**/*.hpp", transformers = [{External = "ClangFormat"}] },
     { glob = "**/*.h", transformers = [{External = "ClangFormat"}] },
     { glob = "**/*.c", transformers = [{External = "ClangFormat"}] },
-    { glob = "**/*.js", transformers = [{External = "Prettier"}] },
-    { glob = "**/*.ts", transformers = [{External = "Prettier"}] },
-    { glob = "**/*.py", transformers = [{External = "RuffFormat"}] },
-    { glob = "**/*.pyi", transformers = [{External = "RuffFormat"}] },
-    { glob = "**/*.txt", transformers = [{Builtin = "TrailingWhitespace"}] },
+
+    # clang-format also works for Javascript and JSON. If it's already
+    # installed, may as well use it rather than configuring a different tool.
+    { glob = "**/*.js", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.json", transformers = [{External = "ClangFormat"}] },
+   
+    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
+]
+```
+
+```toml
+# Example yactrc.toml for web developers
+# "Npm" can be replaced with "Yarn", or the field can be removed entirely to
+# use a global installation of prettier.
+items = [
+    { glob = "**/*.js", transformers = [{External = { Prettier = { package_manager_type = "Npm" } }}] },
+    { glob = "**/*.ts", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.jsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.tsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.html", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.json", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.md", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+]
+```
+
+```toml
+# Example yactrc.toml for Python programmers
+# To use a virtual environment, run `git commit` from the activated environment
+# or provide the virtual environment path (recommended to be within repository
+# root), for example `{ RuffFormat = { venv_path = ".venv" }}`
+items = [
+    { glob = "**/*.py", transformers = [{ External = { RuffFormat = {}}}] },
+    { glob = "**/*.pyi", transformers = [{ External = { RuffFormat = {}}}] },
+
+    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
 ]
 ```
 
