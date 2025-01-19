@@ -55,6 +55,19 @@ fn build_worktree_slice<'repo>(
     repo.find_tree(builder.create_updated(repo, ancestor).unwrap())
 }
 
+pub fn get_last_committed_tree_or_default(repository: &Repository) -> Result<Tree, Error> {
+    let last_committed_tree = repository.head().map(|x| x.peel_to_tree());
+    match last_committed_tree {
+        Ok(tree) => Ok(tree?),
+        Err(err) if matches!(err.code(), git2::ErrorCode::UnbornBranch) => {
+            let treebuilder = repository.treebuilder(None)?;
+            let oid = treebuilder.write()?;
+            Ok(repository.find_tree(oid)?)
+        }
+        Err(e) => Err(e.into()),
+    }
+}
+
 /// Load configuration, apply appropriate transformers to staged changes, and
 /// merge results back into worktree.
 ///
@@ -78,7 +91,7 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
 
     let mut index = repository.index()?;
     let index_tree = repository.find_tree(index.write_tree()?)?;
-    let last_committed_tree = repository.head()?.peel_to_tree()?;
+    let last_committed_tree = get_last_committed_tree_or_default(&repository)?;
     let mut diff =
         repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&index_tree), None)?;
     diff.find_similar(None)?;
