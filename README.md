@@ -57,9 +57,8 @@ items = [
     { glob = "**/*.h", transformers = [{External = "ClangFormat"}] },
     { glob = "**/*.c", transformers = [{External = "ClangFormat"}] },
 
-    # clang-format also works for Javascript and JSON. If it's already
-    # installed, may as well use it rather than configuring a different tool.
-    { glob = "**/*.js", transformers = [{External = "ClangFormat"}] },
+    # clang-format also works for JSON. If it's already installed, may as well
+    # use it rather than configuring a different tool.
     { glob = "**/*.json", transformers = [{External = "ClangFormat"}] },
    
     { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
