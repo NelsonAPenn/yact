@@ -39,7 +39,13 @@ management tools (like `pre-commit`).
    prefers, so these may require modification.
 
 ```toml
-# Example yactrc.toml for Rust programmers
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the Rust sample config file.
+
+# Note if the Rust edition you are using is later than 2015, you may need to
+# create a .rustfmt.toml file in the workspace root specifying the edition.
 [[items]]
 glob = "**/*.rs"
 transformers = [{ External = "Rustfmt" }]
@@ -50,7 +56,10 @@ transformers = [{ Builtin = "TrailingWhitespace" }]
 ```
 
 ```toml
-# Example yactrc.toml for C / C++ programmers
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the C / C++ sample config file.
 items = [
     { glob = "**/*.cpp", transformers = [{External = "ClangFormat"}] },
     { glob = "**/*.hpp", transformers = [{External = "ClangFormat"}] },
@@ -66,7 +75,11 @@ items = [
 ```
 
 ```toml
-# Example yactrc.toml for web developers
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the web development sample config file.
+
 # "Npm" can be replaced with "Yarn", or the field can be removed entirely to
 # use a global installation of prettier.
 items = [
@@ -81,7 +94,11 @@ items = [
 ```
 
 ```toml
-# Example yactrc.toml for Python programmers
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the Python sample config file.
+
 # To use a virtual environment, run `git commit` from the activated environment
 # or provide the virtual environment path (recommended to be within repository
 # root), for example `{ RuffFormat = { venv_path = ".venv" }}`
@@ -94,7 +111,10 @@ items = [
 ```
 
 ```toml
-# Example yactrc.toml for Go programmers
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the Golang sample config file.
 [[items]]
 glob = "**/*.go"
 transformers = [{ External = "Gofmt" }]
