@@ -1,4 +1,4 @@
-requires_yact_version = ">=1.0.0, <2.0.0"
+requires_yact_version = ">=2.0.0, <3.0.0"
 
 [[items]]
 glob = "**/*.rs"
