@@ -55,7 +55,7 @@ fn build_worktree_slice<'repo>(
     repo.find_tree(builder.create_updated(repo, ancestor).unwrap())
 }
 
-pub fn get_last_committed_tree_or_default(repository: &Repository) -> Result<Tree, Error> {
+pub fn get_last_committed_tree_or_default(repository: &Repository) -> Result<Tree<'_>, Error> {
     let last_committed_tree = repository.head().map(|x| x.peel_to_tree());
     match last_committed_tree {
         Ok(tree) => Ok(tree?),
