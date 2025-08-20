@@ -2,24 +2,26 @@
 
 Yet another commit transformer-- but this one is different than the rest!
 
-Enter the forbidden fruit of your development process.
+Finally forget about formatting!
 
-## Features
+`yact` applies formatters to your staged changes, seamlessly updating what you
+commit. Additionally, it works well when staging only some changes within a
+file-- it merges the formatting changes back into your worktree (accepting the
+worktree version in case of a conflict). It's like another programmer cleaning
+up your commits behind the scenes!
 
-`yact` is focused on (in order):
+`yact` is designed to avoid the following issues that plague other popular
+auto-formatters / auto-formatting strategies:
 
-1. Seamlessly applying formatters with minimal disturbance to your workflow or
-   git history (better than other solutions).
-   - Transparently transforms staged changes for commit
-   - Merges the resulting formatting changes back into working tree
-2. Using the first-party implementation (`libgit2`) whenever possible when
-   working with git repositories.
-3. Performance
-4. Efficiency
-
-`yact` provides both a method for configuring what transformers to run on which
-files in a project as well as a method for integrating with other pre-commit
-management tools (like `pre-commit`).
+1. Putting formatting changes in your worktree, aborting the commit, and forcing
+   you to add back the formatting updates to whatever you staged. This is just
+   annoying.
+2. Not playing nice in cases when some changes are staged and some are unstaged
+   and still in progress. Some tools result in borkage; others make you
+   `git add -p` twice, which is again, just annoying.
+3. Format on write can sometimes be jarring. For example, when writing a new
+   function and then saving, the function will be reduced to a minimal form (ex.
+   `int main(){}`).
 
 ## Requirements and installation
 
@@ -165,23 +167,6 @@ and args can be configured. Example below.
 glob = "**/*.rs"
 transformers = [ { System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}]
 ```
-
-## Why another tool?
-
-There are many wonderful tools out there that help you quit spending time
-aligning lines of code, remove common mistakes, and sometimes even automatically
-make common simplifications to your code. There are also tools that help
-integrate these tools with your `git` workflow. However, the tools of the latter
-class usually exhibit a couple main classes of problems.
-
-1. Making you readd your changes. This is just annoying.
-2. Not playing nice in cases when some changes are staged and some are unstaged
-   and still in progress. Some tools result in borkage; others make you
-   `git add -p` twice, which is again, just annoying.
-
-`yact` is a standalone binary which operates on low-level git objects directly,
-formatting staged changes behind the scenes without ever pushing the onus back
-on you, and updating your working tree in the most correct way possible.
 
 ## Considerations
 
