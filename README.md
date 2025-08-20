@@ -2,7 +2,9 @@
 
 Yet another commit transformer-- but this one is different than the rest!
 
-Finally forget about formatting!
+`yact` is a tool that applies code formatters / prettifiers to your code
+automatically when you commit changes. It is designed to be the least intrusive
+method of doing so, allowing you to finally forget about formatting!
 
 `yact` applies formatters to your staged changes, seamlessly updating what you
 commit. Additionally, it works well when staging only some changes within a
