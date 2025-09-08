@@ -18,6 +18,8 @@
  */
 use git2::Repository;
 use std::{
+    fs::Permissions,
+    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -175,4 +177,26 @@ fn conflict_handled_correctly() {
         b"# Blab"
     );
     std::fs::remove_dir_all(repo_path).unwrap();
+}
+
+/// Test that executable files are not deleted by yact
+#[cfg(target_family = "unix")]
+#[test]
+fn executable_files_not_deleted() {
+    let (repo, repo_path) = fresh_repo();
+    let mut index = repo.index().unwrap();
+    let mut permissions = repo_path
+        .join("README.md")
+        .metadata()
+        .unwrap()
+        .permissions();
+    permissions.set_mode(0o770);
+    std::fs::set_permissions(repo_path.join("README.md"), permissions).unwrap();
+    let readme_path = Path::new("README.md");
+    index.add_path(readme_path).unwrap();
+    index.write().unwrap();
+
+    let _ = pre_commit(repo_path.as_path(), None);
+
+    assert!(repo_path.join("README.md").exists());
 }
