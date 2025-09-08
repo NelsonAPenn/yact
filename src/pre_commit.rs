@@ -19,7 +19,7 @@
 use crate::{apply_transform_pipeline, load_configuration, Error};
 use git2::{
     build::{CheckoutBuilder, TreeUpdateBuilder},
-    MergeOptions, Repository, Tree, TreeWalkMode, TreeWalkResult,
+    FileMode, MergeOptions, Repository, Tree, TreeWalkMode, TreeWalkResult,
 };
 use glob::{MatchOptions, Pattern};
 use semver::Version;
@@ -36,6 +36,26 @@ fn build_worktree_slice<'repo>(
         let relative_file_path = Path::new(path).join(entry.name().unwrap());
         let absolute_file_path = repo_path.join(&relative_file_path);
         if absolute_file_path.is_file() {
+            /*
+             * TODO: complete logic for determining file mode. On Unix, symlink
+             * and executable must be handled. On Windows, file mode will
+             * probably have to match the file mode from the ancestor /
+             * formatted tree.
+             */
+            let mut file_mode = FileMode::Blob;
+
+            #[cfg(target_family = "unix")]
+            {
+                if let Ok(metadata) = absolute_file_path.metadata() {
+                    use std::os::unix::fs::MetadataExt;
+
+                    let raw_mode = metadata.mode();
+                    if (raw_mode & 0o111) != 0 {
+                        file_mode = FileMode::BlobExecutable;
+                    }
+                }
+            }
+
             let oid = repo
                 .odb()
                 .unwrap()
@@ -44,11 +64,7 @@ fn build_worktree_slice<'repo>(
                     &std::fs::read(absolute_file_path).unwrap(),
                 )
                 .unwrap();
-            builder.upsert(
-                relative_file_path.to_str().unwrap(),
-                oid,
-                git2::FileMode::Blob,
-            );
+            builder.upsert(relative_file_path.to_str().unwrap(), oid, file_mode);
         }
         TreeWalkResult::Ok
     })?;
