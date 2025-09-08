@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024 Nelson Penn
+ * Copyright 2023, 2024, 2025 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -18,8 +18,6 @@
  */
 use git2::Repository;
 use std::{
-    fs::Permissions,
-    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -183,6 +181,8 @@ fn conflict_handled_correctly() {
 #[cfg(target_family = "unix")]
 #[test]
 fn executable_files_not_deleted() {
+    use std::os::unix::fs::PermissionsExt;
+
     let (repo, repo_path) = fresh_repo();
     let mut index = repo.index().unwrap();
     let mut permissions = repo_path
