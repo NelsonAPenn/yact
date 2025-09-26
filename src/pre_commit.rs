@@ -114,6 +114,9 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
     let mut transformed_tree_builder = TreeUpdateBuilder::new();
 
     for entry in diff.deltas() {
+        if !entry.new_file().exists() {
+            continue;
+        }
         if !entry.new_file().is_binary() {
             let matching_config_item = configuration.items.iter().find(|config_item| {
                 let pattern = Pattern::new(&config_item.glob).unwrap();
