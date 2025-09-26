@@ -200,3 +200,16 @@ fn executable_files_not_deleted() {
 
     assert!(repo_path.join("README.md").exists());
 }
+
+#[test]
+fn staged_deleted_files_ok() {
+    let (repo, repo_path) = fresh_repo();
+    let mut index = repo.index().unwrap();
+    std::fs::remove_file(repo_path.join("README.md")).unwrap();
+    index.remove_path(Path::new("README.md")).unwrap();
+    index.write().unwrap();
+
+    let res = pre_commit(repo_path.as_path(), None);
+    println!("{res:?}");
+    assert!(res.is_ok());
+}
