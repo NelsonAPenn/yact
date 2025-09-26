@@ -107,7 +107,7 @@ impl ShellCommandTransformer {
                          * will print to stdout, ultimately ending up in the
                          * formatted file contents.
                          */
-                        command.args(["run", "-s", "prettier"]);
+                        command.args(["--silent", "run", "prettier"]);
                         command
                     }
                     None => Command::new("prettier"),
