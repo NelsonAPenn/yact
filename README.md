@@ -83,6 +83,10 @@ items = [
 
 # "Npm" can be replaced with "Yarn", or the field can be removed entirely to
 # use a global installation of prettier.
+#
+# package_json_directory can also be specified, e.g.
+#
+# transformers = [{External = { Prettier = { package_manager_type="Yarn", package_json_directory = "webapp"}}]
 items = [
     { glob = "**/*.js", transformers = [{External = { Prettier = { package_manager_type = "Npm" } }}] },
     { glob = "**/*.ts", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
