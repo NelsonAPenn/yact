@@ -1,6 +1,6 @@
 [package]
 name = "yact"
-version = "2.2.1"
+version = "2.2.2"
 edition = "2021"
 readme = "README.md"
 license = "GPL-3.0-or-later"
