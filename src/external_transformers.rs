@@ -41,7 +41,9 @@ pub enum ShellCommandTransformer {
     },
     DenoFmt,
     Prettier {
-        package_json_path: Option<PathBuf>,
+        /// Path to the directory containing package.json, if different from
+        /// repository root.
+        package_json_directory: Option<PathBuf>,
         package_manager_type: Option<JavascriptPackageManagerType>,
     },
     RuffFormat {
@@ -89,7 +91,7 @@ impl ShellCommandTransformer {
                 command
             }
             Self::Prettier {
-                package_json_path,
+                package_json_directory,
                 package_manager_type,
             } => {
                 let mut command = match package_manager_type {
@@ -110,8 +112,8 @@ impl ShellCommandTransformer {
                     }
                     None => Command::new("prettier"),
                 };
-                if let Some(package_json_path) = package_json_path {
-                    let prettier_path = repository_path.as_ref().join(package_json_path);
+                if let Some(package_json_directory) = package_json_directory {
+                    let prettier_path = repository_path.as_ref().join(package_json_directory);
                     command.current_dir(prettier_path);
                 }
                 if let Some(extension) = extension {
