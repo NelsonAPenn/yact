@@ -30,6 +30,13 @@ pub enum JavascriptPackageManagerType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RuffLintBehavior {
+    CheckOnly,
+    CheckAndFix,
+    FixOnly,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShellCommandTransformer {
     Rustfmt,
     Gofmt,
@@ -45,6 +52,12 @@ pub enum ShellCommandTransformer {
         /// repository root.
         package_json_directory: Option<PathBuf>,
         package_manager_type: Option<JavascriptPackageManagerType>,
+    },
+    RuffLint {
+        behavior: RuffLintBehavior,
+        venv_path: Option<PathBuf>,
+        #[serde(default)]
+        unsafe_fixes: bool,
     },
     RuffFormat {
         venv_path: Option<PathBuf>,
@@ -119,6 +132,48 @@ impl ShellCommandTransformer {
                 if let Some(extension) = extension {
                     command.args(["--stdin-filepath", &format!("example.{}", extension)]);
                 }
+                command
+            }
+            Self::RuffLint {
+                behavior,
+                venv_path,
+                unsafe_fixes,
+            } => {
+                let mut command = match venv_path {
+                    Some(venv_path) => {
+                        /*
+                         * This works even if path is absolute as join will
+                         * replace the original path with the absolute one.
+                         */
+                        let python_path = repository_path
+                            .as_ref()
+                            .join(venv_path)
+                            .join("bin")
+                            .join("python");
+
+                        let mut command = Command::new(python_path);
+                        command.args(["-m", "ruff"]);
+                        command
+                    }
+                    None => Command::new("ruff"),
+                };
+                command.arg("check");
+                match behavior {
+                    RuffLintBehavior::FixOnly => {
+                        command.arg("--fix-only");
+                    }
+                    RuffLintBehavior::CheckAndFix => {
+                        command.arg("--fix");
+                    }
+                    RuffLintBehavior::CheckOnly => {}
+                }
+                if *unsafe_fixes {
+                    command.arg("--unsafe-fixes");
+                }
+                if let Some(extension) = extension {
+                    command.args(["--stdin-filename", &format!("example.{}", extension)]);
+                }
+                command.args(["--quiet", "-"]);
                 command
             }
             Self::RuffFormat { venv_path } => {
