@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024 Nelson Penn
+ * Copyright 2023, 2024, 2025 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -86,6 +86,13 @@ pub fn create_shell_transformer<T: Fn(Option<&str>) -> std::process::Command>(
             .map_err(|_| "Failed to wait on transformer process")?;
 
         if !output.status.success() {
+            if let Ok(text) = std::str::from_utf8(&output.stdout) {
+                println!("{}", text);
+            }
+            if let Ok(text) = std::str::from_utf8(&output.stderr) {
+                eprintln!("{}", text);
+            }
+
             return Err("Transformer process produced nonzero exit code.".to_string());
         }
         Ok(output.stdout)
