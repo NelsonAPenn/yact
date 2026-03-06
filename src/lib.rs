@@ -27,7 +27,7 @@ mod transformer;
 pub use pre_commit::pre_commit;
 
 pub use builtin_transformers::BuiltinTransformer;
-pub use config::{load_configuration, Configuration, ConfigurationItem, TransformerOptions};
+pub use config::{Configuration, ConfigurationItem, TransformerOptions, load_configuration};
 pub use error::Error;
 pub use external_transformers::ShellCommandTransformer;
-pub use transformer::{apply_transform_pipeline, create_shell_transformer, transform, Transformer};
+pub use transformer::{Transformer, apply_transform_pipeline, create_shell_transformer, transform};

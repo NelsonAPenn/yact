@@ -17,8 +17,8 @@
  * Yet Another Commit Transformer. If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::{
-    builtin_transformers, create_shell_transformer, BuiltinTransformer, Error,
-    ShellCommandTransformer, Transformer,
+    BuiltinTransformer, Error, ShellCommandTransformer, Transformer, builtin_transformers,
+    create_shell_transformer,
 };
 use git2::Repository;
 use glob::Pattern;

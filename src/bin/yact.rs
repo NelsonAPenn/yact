@@ -18,9 +18,9 @@
  */
 use std::{path::PathBuf, process::ExitCode};
 
-use clap::{crate_version, Parser};
+use clap::{Parser, crate_version};
 use semver::Version;
-use yact::{pre_commit, Error};
+use yact::{Error, pre_commit};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -46,11 +46,16 @@ pub fn main() -> ExitCode {
             ExitCode::FAILURE
         }
         Err(Error::RepositoryNotFound) => {
-            eprintln!("Repository not found in current or parent directories. yact must be run from within a git repository.");
+            eprintln!(
+                "Repository not found in current or parent directories. yact must be run from within a git repository."
+            );
             ExitCode::FAILURE
         }
         Err(Error::InvalidYactVersion(requirement, version)) => {
-            eprintln!("Repository is configured to require yact version {}, but current version is {}. Please install an appropriate version or update the requirement.", requirement, version);
+            eprintln!(
+                "Repository is configured to require yact version {}, but current version is {}. Please install an appropriate version or update the requirement.",
+                requirement, version
+            );
             ExitCode::FAILURE
         }
         Err(Error::GitError(err)) => {
@@ -74,7 +79,9 @@ pub fn main() -> ExitCode {
             ExitCode::FAILURE
         }
         Err(Error::ConfigurationNotFound) => {
-            eprintln!("Could not resolve yactrc.toml configuration file. Ensure it is located at the root of the repository");
+            eprintln!(
+                "Could not resolve yactrc.toml configuration file. Ensure it is located at the root of the repository"
+            );
             ExitCode::FAILURE
         }
         Err(Error::InvalidGlob(glob)) => {

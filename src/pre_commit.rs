@@ -16,10 +16,10 @@
  * You should have received a copy of the GNU General Public License along with
  * Yet Another Commit Transformer. If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::{apply_transform_pipeline, load_configuration, Error};
+use crate::{Error, apply_transform_pipeline, load_configuration};
 use git2::{
-    build::{CheckoutBuilder, TreeUpdateBuilder},
     FileMode, MergeOptions, Repository, Tree, TreeWalkMode, TreeWalkResult,
+    build::{CheckoutBuilder, TreeUpdateBuilder},
 };
 use glob::{MatchOptions, Pattern};
 use semver::Version;
@@ -94,15 +94,14 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
     std::env::set_current_dir(repository_path)?;
     let configuration = load_configuration(&repository)?;
 
-    if let Some(ref version) = check_version {
-        if let Some(version_requirement) = configuration.requires_yact_version {
-            if !version_requirement.matches(version) {
-                return Err(Error::InvalidYactVersion(
-                    version_requirement.clone(),
-                    version.clone(),
-                ));
-            }
-        }
+    if let Some(ref version) = check_version
+        && let Some(version_requirement) = configuration.requires_yact_version
+        && !version_requirement.matches(version)
+    {
+        return Err(Error::InvalidYactVersion(
+            version_requirement.clone(),
+            version.clone(),
+        ));
     }
 
     let mut index = repository.index()?;
