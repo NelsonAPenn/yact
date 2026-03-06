@@ -1,6 +1,6 @@
 [package]
 name = "yact"
-version = "2.3.1"
+version = "2.3.2"
 edition = "2021"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -15,7 +15,7 @@ strip = true
 
 [dependencies]
 clap = { version = "4.5.16", features = ["derive", "cargo"], optional = true }
-git2 = { version = "0.19", default-features = false }
+git2 = { version = "0.20.4", default-features = false }
 glob = "0.3.1"
 semver = { version = "1.0.24", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
