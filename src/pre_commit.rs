@@ -198,6 +198,23 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
     let final_diff =
         repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&transformed_tree), None)?;
     if diff.stats()?.files_changed() > 0 && final_diff.stats()?.files_changed() == 0 {
+        /*
+         * If the original diff contained changes, but the final diff (after
+         * yact) contained no changes, all changes added to tracked files were
+         * bad formatting changes. The commit is most likely unintentional, so
+         * an error is returned.
+         *
+         * The case of both the original diff and final diff being empty is
+         * usually:
+         *
+         * - An unintentional git commit with no changes-- this is rejected by
+         *   git before the pre-commit stage
+         * - A case of amending only the commit message of a commit-- the commit
+         *   should be allowed by the pre-commit hook
+         *
+         * This approach allows both of these situations to be handled as
+         * expected.
+         */
         return Err(Error::EmptyIndex);
     }
 
