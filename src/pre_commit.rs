@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024, 2025 Nelson Penn
+ * Copyright 2023, 2024, 2025, 2026 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -197,8 +197,8 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
 
     let final_diff =
         repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&transformed_tree), None)?;
-
-    if final_diff.stats()?.files_changed() == 0 {
+    if diff.stats()?.files_changed() > 0 && final_diff.stats()?.files_changed() == 0
+        {
         return Err(Error::EmptyIndex);
     }
 
