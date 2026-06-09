@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024, 2025 Nelson Penn
+ * Copyright 2023, 2024, 2025, 2026 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -41,6 +41,8 @@ pub enum ShellCommandTransformer {
     Rustfmt,
     Gofmt,
     ClangFormat,
+    /// A generic [ShellCommandTransformer] that can be used to configure any
+    /// formatter not already supported.
     System {
         command: String,
         env: HashMap<String, String>,
