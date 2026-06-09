@@ -5,6 +5,9 @@ edition = "2024"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 authors = ["Nelson Penn"]
+documentation = "https://docs.rs/yact"
+repository = "https://github.com/NelsonAPenn/yact"
+keywords = ["git", "libgit2", "formatter", "pre-commit", "hook"]
 description = "Yet Another Commit Transformer: a tool for formatting staged files with minimal disturbance to developer workflow."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
