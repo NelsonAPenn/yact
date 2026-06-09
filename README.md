@@ -28,7 +28,7 @@ auto-formatters / auto-formatting strategies:
   built automatically if it is not installed on the target system.
 - For the time being, build and install `yact` from source:
   1. [Install Rust](https://www.rust-lang.org/tools/install)
-  2. `cargo install --git https://github.com/NelsonAPenn/yact --bin yact`
+  2. `cargo install yact`
 - `yact` does not install formatting tools for you. This does require that any
   desired external formatters be installed and on the system path.
 
