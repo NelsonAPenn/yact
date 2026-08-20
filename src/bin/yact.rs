@@ -53,7 +53,7 @@ pub fn main() -> ExitCode {
 
     match result {
         Err(Error::EmptyIndex) => {
-            eprintln!("Aborting commit. No staged changes or they were formatted away.");
+            eprintln!("Aborting commit; all staged changes were unwanted formatting changes.");
             ExitCode::FAILURE
         }
         Err(Error::TransformerError(message)) => {
