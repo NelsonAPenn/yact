@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024, 2025 Nelson Penn
+ * Copyright 2023, 2024, 2025, 2026 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -18,22 +18,40 @@
  */
 use std::{path::PathBuf, process::ExitCode};
 
-use clap::{Parser, crate_version};
+use clap::{Parser, Subcommand, crate_version};
 use semver::Version;
-use yact::{Error, pre_commit};
+use yact::{Error, init, pre_commit};
 
 #[derive(Parser)]
 #[command(version, about)]
-pub struct Args {
+pub struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
+
     #[arg(short, long, value_name = "path to workspace")]
     path: Option<PathBuf>,
 }
 
-pub fn main() -> ExitCode {
-    let args = Args::parse();
-    let version = Version::parse(crate_version!()).ok();
+#[derive(Subcommand)]
+pub enum Command {
+    /// Format changes. (This is meant to be run automatically.)
+    PreCommit,
+    /// Link the yact executable into the pre-commit hook path.
+    Init,
+}
 
-    match pre_commit(args.path.unwrap_or(PathBuf::from(".")), version) {
+pub fn main() -> ExitCode {
+    let args = Cli::parse();
+
+    let result = match args.command {
+        None | Some(Command::PreCommit) => {
+            let version = Version::parse(crate_version!()).ok();
+            pre_commit(args.path.unwrap_or(PathBuf::from(".")), version)
+        }
+        Some(Command::Init) => init(args.path.unwrap_or(PathBuf::from("."))),
+    };
+
+    match result {
         Err(Error::EmptyIndex) => {
             eprintln!("Aborting commit. No staged changes or they were formatted away.");
             ExitCode::FAILURE
@@ -48,6 +66,16 @@ pub fn main() -> ExitCode {
         Err(Error::RepositoryNotFound) => {
             eprintln!(
                 "Repository not found in current or parent directories. yact must be run from within a git repository."
+            );
+            ExitCode::FAILURE
+        }
+        Err(Error::UnableToDetermineYactPath) => {
+            eprintln!("Unable to determine path to yact executable.");
+            ExitCode::FAILURE
+        }
+        Err(Error::PreCommitHookAlreadyExists) => {
+            eprintln!(
+                "Cannot install yact in pre-commit hook path: member already exists at path."
             );
             ExitCode::FAILURE
         }

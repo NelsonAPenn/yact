@@ -34,10 +34,12 @@ mod builtin_transformers;
 mod config;
 mod error;
 mod external_transformers;
+mod init;
 mod pre_commit;
 #[cfg(test)]
 mod tests;
 mod transformer;
+pub use init::init;
 pub use pre_commit::pre_commit;
 
 pub use builtin_transformers::BuiltinTransformer;
