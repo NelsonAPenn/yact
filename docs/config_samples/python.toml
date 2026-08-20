@@ -7,8 +7,8 @@
 # or provide the virtual environment path (recommended to be within repository
 # root), for example `{ RuffFormat = { venv_path = ".venv" }}`
 items = [
-    { glob = "**/*.py", transformers = [{ External = { RuffFormat = {}}}] },
-    { glob = "**/*.pyi", transformers = [{ External = { RuffFormat = {}}}] },
+    { glob = "**/*.py", transformers = [{ RuffFormat = {}}] },
+    { glob = "**/*.pyi", transformers = [{ RuffFormat = {}}] },
 
-    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
+    { glob = "**/*.md", transformers = ["TrailingWhitespace"]},
 ]

@@ -93,7 +93,7 @@ and args can be configured. Example below.
 ```toml
 [[items]]
 glob = "**/*.rs"
-transformers = [ { External = { System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}}]
+transformers = [{ System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}]
 ```
 
 ## Considerations

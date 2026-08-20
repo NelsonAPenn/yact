@@ -4,8 +4,8 @@
 # Created from the Golang sample config file.
 [[items]]
 glob = "**/*.go"
-transformers = [{ External = "Gofmt" }]
+transformers = ["Gofmt"]
 
 [[items]]
 glob = "**/*.md"
-transformers = [{ Builtin = "TrailingWhitespace" }]
+transformers = ["TrailingWhitespace"]
