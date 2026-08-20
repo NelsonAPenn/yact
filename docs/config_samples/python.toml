@@ -1,0 +1,14 @@
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the Python sample config file.
+
+# To use a virtual environment, run `git commit` from the activated environment
+# or provide the virtual environment path (recommended to be within repository
+# root), for example `{ RuffFormat = { venv_path = ".venv" }}`
+items = [
+    { glob = "**/*.py", transformers = [{ External = { RuffFormat = {}}}] },
+    { glob = "**/*.pyi", transformers = [{ External = { RuffFormat = {}}}] },
+
+    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
+]

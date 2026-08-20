@@ -1,0 +1,20 @@
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the web development sample config file.
+
+# "Npm" can be replaced with "Yarn", or the field can be removed entirely to
+# use a global installation of prettier.
+#
+# package_json_directory can also be specified, e.g.
+#
+# transformers = [{External = { Prettier = { package_manager_type="Yarn", package_json_directory = "webapp"}}]
+items = [
+    { glob = "**/*.js", transformers = [{External = { Prettier = { package_manager_type = "Npm" } }}] },
+    { glob = "**/*.ts", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.jsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.tsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.html", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.json", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.md", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+]
