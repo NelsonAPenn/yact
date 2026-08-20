@@ -26,13 +26,12 @@ For more information on how yact works, see [this page](docs/how_it_works.md).
 
 ## Requirements and installation
 
-- This crate depends on [libgit2](https://libgit2.org/), but this should be
-  built automatically if it is not installed on the target system.
-- For the time being, build and install `yact` from source:
-  1. [Install Rust](https://www.rust-lang.org/tools/install)
-  2. `cargo install yact`
-- `yact` does not install formatting tools for you. This does require that any
-  desired external formatters be installed and on the system path.
+1. [Install Rust](https://www.rust-lang.org/tools/install)
+2. `cargo install yact`
+3. Set up desired code formatters: `yact` does not manage formatting tools. This
+   entails that any desired external formatters must be installed and on the
+   system path (or configured to be run from the workspace such as in the case
+   of a virtual environment).
 
 ## Usage (on a per-repository basis)
 
