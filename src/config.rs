@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024, 2025 Nelson Penn
+ * Copyright 2023, 2024, 2025, 2026 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -27,6 +27,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum TransformerOptions {
     Builtin(BuiltinTransformer),
     External(ShellCommandTransformer),

@@ -3,14 +3,14 @@
 #
 # Created from the C / C++ sample config file.
 items = [
-    { glob = "**/*.cpp", transformers = [{External = "ClangFormat"}] },
-    { glob = "**/*.hpp", transformers = [{External = "ClangFormat"}] },
-    { glob = "**/*.h", transformers = [{External = "ClangFormat"}] },
-    { glob = "**/*.c", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.cpp", transformers = ["ClangFormat"] },
+    { glob = "**/*.hpp", transformers = ["ClangFormat"] },
+    { glob = "**/*.h", transformers = ["ClangFormat"] },
+    { glob = "**/*.c", transformers = ["ClangFormat"] },
 
     # clang-format also works for JSON. If it's already installed, may as well
     # use it rather than configuring a different tool.
-    { glob = "**/*.json", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.json", transformers = ["ClangFormat"] },
    
-    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
+    { glob = "**/*.md", transformers = ["TrailingWhitespace"] },
 ]

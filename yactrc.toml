@@ -1,9 +1,9 @@
-requires_yact_version = ">=2.0.0, <3.0.0"
+requires_yact_version = ">=3.0.0, <4.0.0"
 
 [[items]]
 glob = "**/*.rs"
-transformers = [{ External = "Rustfmt" }]
+transformers = ["Rustfmt"]
 
 [[items]]
 glob = "**/*.md"
-transformers = [{ External = "DenoFmt" }]
+transformers = ["DenoFmt"]

@@ -8,13 +8,13 @@
 #
 # package_json_directory can also be specified, e.g.
 #
-# transformers = [{External = { Prettier = { package_manager_type="Yarn", package_json_directory = "webapp"}}]
+# transformers = [{ Prettier = { package_manager_type="Yarn", package_json_directory = "webapp"}}]
 items = [
-    { glob = "**/*.js", transformers = [{External = { Prettier = { package_manager_type = "Npm" } }}] },
-    { glob = "**/*.ts", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.jsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.tsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.html", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.json", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.md", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
+    { glob = "**/*.js", transformers = [{ Prettier = { package_manager_type = "Npm" }}] },
+    { glob = "**/*.ts", transformers = [{ Prettier = { package_manager_type = "Npm" }}] },
+    { glob = "**/*.jsx", transformers = [{ Prettier = { package_manager_type = "Npm" }}] },
+    { glob = "**/*.tsx", transformers = [{ Prettier = { package_manager_type = "Npm" }}] },
+    { glob = "**/*.html", transformers = [{ Prettier = { package_manager_type = "Npm" }}] },
+    { glob = "**/*.json", transformers = [{ Prettier = { package_manager_type = "Npm" }}] },
+    { glob = "**/*.md", transformers = [{ Prettier = { package_manager_type = "Npm" }}] },
 ]

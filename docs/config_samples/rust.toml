@@ -7,8 +7,8 @@
 # create a .rustfmt.toml file in the workspace root specifying the edition.
 [[items]]
 glob = "**/*.rs"
-transformers = [{ External = "Rustfmt" }]
+transformers = ["Rustfmt"]
 
 [[items]]
 glob = "**/*.md"
-transformers = [{ Builtin = "TrailingWhitespace" }]
+transformers = ["TrailingWhitespace"]
