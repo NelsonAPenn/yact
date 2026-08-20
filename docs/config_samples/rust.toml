@@ -1,0 +1,14 @@
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the Rust sample config file.
+
+# Note if the Rust edition you are using is later than 2015, you may need to
+# create a .rustfmt.toml file in the workspace root specifying the edition.
+[[items]]
+glob = "**/*.rs"
+transformers = [{ External = "Rustfmt" }]
+
+[[items]]
+glob = "**/*.md"
+transformers = [{ Builtin = "TrailingWhitespace" }]

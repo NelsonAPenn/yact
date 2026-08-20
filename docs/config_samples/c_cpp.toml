@@ -1,0 +1,16 @@
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the C / C++ sample config file.
+items = [
+    { glob = "**/*.cpp", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.hpp", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.h", transformers = [{External = "ClangFormat"}] },
+    { glob = "**/*.c", transformers = [{External = "ClangFormat"}] },
+
+    # clang-format also works for JSON. If it's already installed, may as well
+    # use it rather than configuring a different tool.
+    { glob = "**/*.json", transformers = [{External = "ClangFormat"}] },
+   
+    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
+]

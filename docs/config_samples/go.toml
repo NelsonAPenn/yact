@@ -1,0 +1,11 @@
+# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
+# information.
+#
+# Created from the Golang sample config file.
+[[items]]
+glob = "**/*.go"
+transformers = [{ External = "Gofmt" }]
+
+[[items]]
+glob = "**/*.md"
+transformers = [{ Builtin = "TrailingWhitespace" }]

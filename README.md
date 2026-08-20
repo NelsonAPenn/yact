@@ -22,6 +22,8 @@ auto-formatters / auto-formatting strategies:
    function and then saving, the function will be reduced to a minimal form (ex.
    `int main(){}`).
 
+For more information on how yact works, see [this page](docs/how_it_works.md).
+
 ## Requirements and installation
 
 - This crate depends on [libgit2](https://libgit2.org/), but this should be
@@ -34,100 +36,16 @@ auto-formatters / auto-formatting strategies:
 
 ## Usage (on a per-repository basis)
 
-1. Create a config file named `yactrc.toml` in the workspace root. Below are
-   some example config files that will apply to most people. Note that the
-   configuration file is dependent on what languages and formatters your team
-   prefers, so these may require modification.
+1. Create a config file named `yactrc.toml` in the workspace root. The
+   `docs/config_samples` folder contains example config files that will apply to
+   most people. Note that the configuration file is dependent on what languages
+   and formatters your team prefers, so these may require modification.
 
-```toml
-# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
-# information.
-#
-# Created from the Rust sample config file.
-
-# Note if the Rust edition you are using is later than 2015, you may need to
-# create a .rustfmt.toml file in the workspace root specifying the edition.
-[[items]]
-glob = "**/*.rs"
-transformers = [{ External = "Rustfmt" }]
-
-[[items]]
-glob = "**/*.md"
-transformers = [{ Builtin = "TrailingWhitespace" }]
-```
-
-```toml
-# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
-# information.
-#
-# Created from the C / C++ sample config file.
-items = [
-    { glob = "**/*.cpp", transformers = [{External = "ClangFormat"}] },
-    { glob = "**/*.hpp", transformers = [{External = "ClangFormat"}] },
-    { glob = "**/*.h", transformers = [{External = "ClangFormat"}] },
-    { glob = "**/*.c", transformers = [{External = "ClangFormat"}] },
-
-    # clang-format also works for JSON. If it's already installed, may as well
-    # use it rather than configuring a different tool.
-    { glob = "**/*.json", transformers = [{External = "ClangFormat"}] },
-   
-    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
-]
-```
-
-```toml
-# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
-# information.
-#
-# Created from the web development sample config file.
-
-# "Npm" can be replaced with "Yarn", or the field can be removed entirely to
-# use a global installation of prettier.
-#
-# package_json_directory can also be specified, e.g.
-#
-# transformers = [{External = { Prettier = { package_manager_type="Yarn", package_json_directory = "webapp"}}]
-items = [
-    { glob = "**/*.js", transformers = [{External = { Prettier = { package_manager_type = "Npm" } }}] },
-    { glob = "**/*.ts", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.jsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.tsx", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.html", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.json", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-    { glob = "**/*.md", transformers = [{External = { Prettier = { package_manager_type = "Npm" }}}] },
-]
-```
-
-```toml
-# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
-# information.
-#
-# Created from the Python sample config file.
-
-# To use a virtual environment, run `git commit` from the activated environment
-# or provide the virtual environment path (recommended to be within repository
-# root), for example `{ RuffFormat = { venv_path = ".venv" }}`
-items = [
-    { glob = "**/*.py", transformers = [{ External = { RuffFormat = {}}}] },
-    { glob = "**/*.pyi", transformers = [{ External = { RuffFormat = {}}}] },
-
-    { glob = "**/*.md", transformers = [{ Builtin = "TrailingWhitespace" }]},
-]
-```
-
-```toml
-# Configuration file for yact. See https://github.com/NelsonAPenn/yact for more
-# information.
-#
-# Created from the Golang sample config file.
-[[items]]
-glob = "**/*.go"
-transformers = [{ External = "Gofmt" }]
-
-[[items]]
-glob = "**/*.md"
-transformers = [{ Builtin = "TrailingWhitespace" }]
-```
+- [Rust sample](docs/config_samples/rust.toml)
+- [C and C++ sample](docs/config_samples/c_cpp.toml)
+- [Web development sample](docs/config_samples/web.toml)
+- [Python sample](docs/config_samples/python.toml)
+- [Go sample](docs/config_samples/go.toml)
 
 2. Update your pre-commit git hook to run yact. In the simplest case (where no
    pre-commit hooks have been configured yet), run
@@ -141,6 +59,9 @@ This simply symlinks or hardlinks the yact executable into
 scripts set up that you'd like to keep, add yact to your script manually. Due to
 fallability of performing such an update automatically, these cases are left up
 to the user.
+
+**The configuration is now complete. Committed changes will be formatted
+transparently.**
 
 ## Transformers
 
@@ -173,7 +94,7 @@ and args can be configured. Example below.
 ```toml
 [[items]]
 glob = "**/*.rs"
-transformers = [ { System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}]
+transformers = [ { External = { System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}}]
 ```
 
 ## Considerations
@@ -182,18 +103,3 @@ transformers = [ { System = { command = "rustfmt", env = {}, args = ["--emit", "
 modifying your working tree as it sees fit. This is done in a fairly safe
 manner, merging formatting changes back into your worktree but keeping the
 worktree's version in case of conflicts.
-
-## How it works
-
-`yact` dives into git plumbing to manage staged changes as perfectly as it can.
-It uses bindings to `libgit2` to do things right.
-
-General flow:
-
-1. (If used as pre-commit hook management replacement) iterate diff and find the
-   right transformer for each file.
-2. Create new blob as transformation of staged blob
-3. Diff new blob and work tree.
-4. Merge diff into worktree.
-5. (If used as a pre-commit hook management replacement) create new tree and
-   bump commit to point to new tree.
