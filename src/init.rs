@@ -18,6 +18,7 @@
  */
 
 use crate::Error;
+use git2::Repository;
 use std::path::{Path, PathBuf};
 use which::which;
 
@@ -38,9 +39,11 @@ fn get_absolute_executable_path() -> Result<PathBuf, Error> {
     }
 }
 
-pub fn init<P: AsRef<Path>>(repository_path: P, force: bool) -> Result<(), Error> {
+pub fn init<P: AsRef<Path>>(path: P, force: bool) -> Result<(), Error> {
+    let repository = Repository::discover(path)?;
+    let repository_path = repository.workdir().ok_or(Error::RepositoryIsBare)?;
+
     let hook_path = repository_path
-        .as_ref()
         .join(".git")
         .join("hooks")
         .join("pre-commit");
