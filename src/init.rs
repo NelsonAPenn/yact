@@ -38,14 +38,19 @@ fn get_absolute_executable_path() -> Result<PathBuf, Error> {
     }
 }
 
-pub fn init<P: AsRef<Path>>(repository_path: P) -> Result<(), Error> {
+pub fn init<P: AsRef<Path>>(repository_path: P, force: bool) -> Result<(), Error> {
     let hook_path = repository_path
         .as_ref()
         .join(".git")
         .join("hooks")
         .join("pre-commit");
+
     if hook_path.exists() {
-        return Err(Error::PreCommitHookAlreadyExists);
+        if force {
+            std::fs::remove_file(&hook_path)?;
+        } else {
+            return Err(Error::PreCommitHookAlreadyExists);
+        }
     }
     let executable_path = get_absolute_executable_path()?;
 

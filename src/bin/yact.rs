@@ -18,7 +18,7 @@
  */
 use std::{path::PathBuf, process::ExitCode};
 
-use clap::{Parser, Subcommand, crate_version};
+use clap::{Args, Parser, Subcommand, crate_version};
 use semver::Version;
 use yact::{Error, init, pre_commit};
 
@@ -37,7 +37,14 @@ pub enum Command {
     /// Format changes. (This is meant to be run automatically.)
     PreCommit,
     /// Link the yact executable into the pre-commit hook path.
-    Init,
+    Init(InitArgs),
+}
+
+#[derive(Args)]
+pub struct InitArgs {
+    /// Try to overwrite the member at the pre-commit hook path if it exists.
+    #[arg(short, long, default_value_t = false)]
+    force: bool,
 }
 
 pub fn main() -> ExitCode {
@@ -48,7 +55,9 @@ pub fn main() -> ExitCode {
             let version = Version::parse(crate_version!()).ok();
             pre_commit(args.path.unwrap_or(PathBuf::from(".")), version)
         }
-        Some(Command::Init) => init(args.path.unwrap_or(PathBuf::from("."))),
+        Some(Command::Init(init_args)) => {
+            init(args.path.unwrap_or(PathBuf::from(".")), init_args.force)
+        }
     };
 
     match result {
@@ -75,7 +84,7 @@ pub fn main() -> ExitCode {
         }
         Err(Error::PreCommitHookAlreadyExists) => {
             eprintln!(
-                "Cannot install yact in pre-commit hook path: member already exists at path."
+                "Cannot install yact in pre-commit hook path: member already exists at path. Rerun init command with --force to replace."
             );
             ExitCode::FAILURE
         }
