@@ -32,7 +32,7 @@ auto-formatters / auto-formatting strategies:
 - `yact` does not install formatting tools for you. This does require that any
   desired external formatters be installed and on the system path.
 
-## Usage
+## Usage (on a per-repository basis)
 
 1. Create a config file named `yactrc.toml` in the workspace root. Below are
    some example config files that will apply to most people. Note that the
@@ -129,13 +129,18 @@ glob = "**/*.md"
 transformers = [{ Builtin = "TrailingWhitespace" }]
 ```
 
-2. Update your pre-commit git hook to run yact. For example, on Unix systems,
-   run the following command from the root of the repository you'd like to use
-   yact in.
+2. Update your pre-commit git hook to run yact. In the simplest case (where no
+   pre-commit hooks have been configured yet), run
 
 ```sh
-ln -s "$(which yact)" .git/hooks/pre-commit
+yact init
 ```
+
+This simply symlinks or hardlinks the yact executable into
+`[repository root]/.git/hooks/pre-commit`. If you already have pre-commit
+scripts set up that you'd like to keep, add yact to your script manually. Due to
+fallability of performing such an update automatically, these cases are left up
+to the user.
 
 ## Transformers
 
