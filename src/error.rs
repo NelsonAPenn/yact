@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024, 2025 Nelson Penn
+ * Copyright 2023, 2024, 2025, 2026 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -25,6 +25,8 @@ pub enum Error {
     ConfigurationNotFound,
     ConfigurationParseError(toml::de::Error),
     ConfigurationEncodingError(std::str::Utf8Error),
+    UnableToDetermineYactPath,
+    PreCommitHookAlreadyExists,
     InvalidYactVersion(VersionReq, Version),
     InvalidGlob(String),
     RepositoryNotFound,
