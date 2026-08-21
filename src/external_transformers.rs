@@ -113,7 +113,7 @@ impl ShellCommandTransformer {
                 let mut command = match package_manager_type {
                     Some(JavascriptPackageManagerType::Bun) => {
                         let mut command = Command::new("bun");
-                        command.args(&["run", "prettier"]);
+                        command.args(["run", "prettier"]);
                         command
                     }
                     Some(JavascriptPackageManagerType::Npm) => {
