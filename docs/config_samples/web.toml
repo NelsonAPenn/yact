@@ -3,8 +3,8 @@
 #
 # Created from the web development sample config file.
 
-# "Npm" can be replaced with "Yarn", or the field can be removed entirely to
-# use a global installation of prettier.
+# "Npm" can be replaced with "Bun" or "Yarn", or the field can be removed
+# entirely to use a global installation of prettier.
 #
 # package_json_directory can also be specified, e.g.
 #
