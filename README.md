@@ -46,6 +46,9 @@ For more information on how yact works, see [this page](docs/how_it_works.md).
 - [Python sample](docs/config_samples/python.toml)
 - [Go sample](docs/config_samples/go.toml)
 
+For a full list of configuration options, see
+[this page](docs/configuration.md).
+
 2. Update your pre-commit git hook to run yact. In the simplest case (where no
    pre-commit hooks have been configured yet), run
 
@@ -95,6 +98,9 @@ and args can be configured. Example below.
 glob = "**/*.rs"
 transformers = [ { External = { System = { command = "rustfmt", env = {}, args = ["--emit", "stdout"] }}}]
 ```
+
+For a full list of configuration options, see
+[this page](docs/configuration.md).
 
 ## Considerations
 
