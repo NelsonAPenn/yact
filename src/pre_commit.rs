@@ -23,7 +23,7 @@ use git2::{
 };
 use glob::{MatchOptions, Pattern};
 use semver::Version;
-use std::{num::NonZero, path::Path, thread::available_parallelism};
+use std::{path::Path, thread::available_parallelism};
 
 fn build_worktree_slice<'repo>(
     repo: &'repo Repository,
