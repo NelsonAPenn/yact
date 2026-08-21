@@ -23,7 +23,7 @@ transformers = []
 ### Trailing whitespace trimmer
 
 ```toml
-{Builtin = "TrailingWhitespace"}
+transformers = [{ Builtin = "TrailingWhitespace" }]
 ```
 
 ## External transformers
@@ -34,13 +34,13 @@ More than likely the edition at least will need to be configured in this way.
 ### Rustfmt
 
 ```toml
-{External = "Rustfmt"}
+transformers = [{ External = "Rustfmt" }]
 ```
 
 ### Gofmt
 
 ```toml
-{External = "Gofmt"}
+transformers = [{ External = "Gofmt" }]
 ```
 
 ### Clang format
@@ -48,19 +48,19 @@ More than likely the edition at least will need to be configured in this way.
 If specific configuration is desired, configure with a `.clang-format` file.
 
 ```toml
-{External = "ClangFormat"}
+transformers = [{ External = "ClangFormat" }]
 ```
 
 ### Deno fmt
 
 ```toml
-{External = "DenoFmt"}
+transformers = [{ External = "DenoFmt" }]
 ```
 
 ### Prettier
 
 ```toml
-{ External = { Prettier = { package_json_directory = "web/projects/example/", package_manager_type = "Bun" }}}
+transformers = [{ External = { Prettier = { package_json_directory = "web/projects/example/", package_manager_type = "Bun" }}}]
 ```
 
 | Key                    | Required / Optional | Description                                                                                                                 |
@@ -73,7 +73,7 @@ If specific configuration is desired, configure with a `.clang-format` file.
 Configurable Ruff linter autofixes.
 
 ```toml
-{ External = { RuffLint = { behavior = "", venv_path = ".venv", unsafe_fixes = true }}}
+transformers = [{ External = { RuffLint = { behavior = "", venv_path = ".venv", unsafe_fixes = true }}}]
 ```
 
 | Key          | Required / Optional | Description                                                                                                                          |
@@ -88,7 +88,7 @@ The configuration for `ruff` allows specifying a `venv_path` which allows
 running the virtual environment's installed version of `ruff`.
 
 ```toml
-{ External = { RuffFormat = { venv_path = ".venv" }}}
+transformers = [{ External = { RuffFormat = { venv_path = ".venv" }}}]
 ```
 
 | Key       | Required / Optional | Description                                                                                                                          |
@@ -101,7 +101,7 @@ A generic transformer that can be used to configure any formatter not already
 supported.
 
 ```toml
-{ External = { System = { command = "bash", env = {}, args = ["-c", "csharpier format"] }}}
+transformers = [{ External = { System = { command = "bash", env = {}, args = ["-c", "csharpier format"] }}}]
 ```
 
 | Key     | Required / Optional | Description                                   |
