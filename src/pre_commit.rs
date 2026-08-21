@@ -111,7 +111,6 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
         repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&index_tree), None)?;
     diff.find_similar(None)?;
     let mut transformed_tree_builder = TreeUpdateBuilder::new();
-    // TODO: if parallelism is 1, then work must be done on main thread as before
     let mut pool = ThreadPool::new(available_parallelism().map(|i| i.into()).unwrap_or(1) - 1);
 
     for entry in diff.deltas() {
