@@ -38,6 +38,7 @@ mod init;
 mod pre_commit;
 #[cfg(test)]
 mod tests;
+mod thread_pool;
 mod transformer;
 pub use init::init;
 pub use pre_commit::pre_commit;

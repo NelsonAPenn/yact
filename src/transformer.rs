@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, 2024, 2025 Nelson Penn
+ * Copyright 2023, 2024, 2025, 2026 Nelson Penn
  *
  * This file is part of Yet Another Commit Transformer.
  *
@@ -24,8 +24,11 @@ use std::process::Stdio;
 ///
 /// Example implementors might be a builtin trailing whitespace transformer,
 /// or shell transformer.
-pub trait Transformer: Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String> {}
-impl<T> super::Transformer for T where T: Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String> {}
+pub trait Transformer: Send + Sync + Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String> {}
+impl<T> super::Transformer for T where
+    T: Send + Sync + Fn(&[u8], Option<&str>) -> Result<Vec<u8>, String>
+{
+}
 
 /// Apply a transform to an existing blob, creating another (for example,
 /// applying linting)
@@ -45,27 +48,20 @@ where
 /// Apply many transform to an existing blob, creating another (for example,
 /// applying linting)
 pub fn apply_transform_pipeline(
-    repository: &Repository,
-    blob: &Blob,
-    transformers: &[Box<dyn Transformer>],
-    extension: Option<&str>,
-) -> Result<Oid, crate::Error> {
-    if transformers.is_empty() {
-        Ok(blob.id())
-    } else {
-        let mut transformer_iter = transformers.iter();
-        let mut transformed = transformer_iter.next().unwrap()(blob.content(), extension)?;
-        for transformer in transformer_iter {
-            transformed = transformer(transformed.as_slice(), extension)?;
-        }
-
-        Ok(repository.blob(transformed.as_slice())?)
+    contents: Vec<u8>,
+    transformers: Vec<Box<dyn Transformer>>,
+    extension: Option<String>,
+) -> Result<Vec<u8>, crate::Error> {
+    let mut transformed = contents;
+    for transformer in transformers {
+        transformed = transformer(&transformed, extension.as_deref())?;
     }
+    Ok(transformed)
 }
 
 /// create a shell transformer from a command with process and arguments
 /// configured.
-pub fn create_shell_transformer<T: Fn(Option<&str>) -> std::process::Command>(
+pub fn create_shell_transformer<T: Send + Sync + Fn(Option<&str>) -> std::process::Command>(
     command_getter: T,
 ) -> impl Transformer {
     move |data: &[u8], extension: Option<&str>| {
