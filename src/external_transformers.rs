@@ -27,6 +27,7 @@ use std::{
 pub enum JavascriptPackageManagerType {
     Npm,
     Yarn,
+    Bun,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,6 +111,11 @@ impl ShellCommandTransformer {
                 package_manager_type,
             } => {
                 let mut command = match package_manager_type {
+                    Some(JavascriptPackageManagerType::Bun) => {
+                        let mut command = Command::new("bun");
+                        command.args(&["run", "prettier"]);
+                        command
+                    }
                     Some(JavascriptPackageManagerType::Npm) => {
                         let mut command = Command::new("npx");
                         command.arg("prettier");
