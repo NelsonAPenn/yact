@@ -153,10 +153,19 @@ impl ShellCommandTransformer {
                          * This works even if path is absolute as join will
                          * replace the original path with the absolute one.
                          */
+
+                        #[cfg(not(target_family = "windows"))]
                         let python_path = repository_path
                             .as_ref()
                             .join(venv_path)
                             .join("bin")
+                            .join("python");
+
+                        #[cfg(target_family = "windows")]
+                        let python_path = repository_path
+                            .as_ref()
+                            .join(venv_path)
+                            .join("Scripts")
                             .join("python");
 
                         let mut command = Command::new(python_path);
