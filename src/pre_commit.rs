@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License along with
  * Yet Another Commit Transformer. If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::{Error, apply_transform_pipeline, load_configuration};
+use crate::{Error, apply_transform_pipeline, load_configuration, thread_pool::ThreadPool};
 use git2::{
     FileMode, MergeOptions, Repository, Tree, TreeWalkMode, TreeWalkResult,
     build::{CheckoutBuilder, TreeUpdateBuilder},
 };
 use glob::{MatchOptions, Pattern};
 use semver::Version;
-use std::path::Path;
+use std::{path::Path, thread::available_parallelism};
 
 fn build_worktree_slice<'repo>(
     repo: &'repo Repository,
@@ -111,6 +111,7 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
         repository.diff_tree_to_tree(Some(&last_committed_tree), Some(&index_tree), None)?;
     diff.find_similar(None)?;
     let mut transformed_tree_builder = TreeUpdateBuilder::new();
+    let mut pool = ThreadPool::new(available_parallelism().map(|i| i.into()).unwrap_or(1) - 1);
 
     for entry in diff.deltas() {
         if !entry.new_file().exists() {
@@ -138,6 +139,10 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
                 .map(|x| x.transformer(repository_path))
                 .collect::<Vec<_>>();
 
+            if transformers.is_empty() {
+                continue;
+            }
+
             eprintln!(
                 "Transforming staged file: {}",
                 entry.new_file().path().unwrap().to_str().unwrap()
@@ -147,19 +152,34 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
                 .path()
                 .unwrap()
                 .extension()
-                .and_then(|x| x.to_str());
-            let oid = apply_transform_pipeline(
-                &repository,
-                &repository.find_blob(entry.new_file().id())?,
-                &transformers,
-                extension,
-            )?;
-            transformed_tree_builder.upsert(
-                entry.new_file().path_bytes().unwrap(),
-                oid,
-                entry.new_file().mode(),
-            );
+                .and_then(|x| x.to_str().map(str::to_string));
+            let contents = repository
+                .find_blob(entry.new_file().id())
+                .unwrap()
+                .content()
+                .to_vec();
+
+            let entry_path = entry.new_file().path_bytes().unwrap().to_vec();
+            let entry_mode = entry.new_file().mode();
+            // TODO: very unwrappy; ? can break out and not join pool.
+
+            if let Some((transformed, entry_path, entry_mode)) = pool.submit(move || {
+                let result = apply_transform_pipeline(contents, transformers, extension);
+                (result, entry_path, entry_mode)
+            }) {
+                let transformed = transformed?;
+                let oid = repository.blob(transformed.as_slice())?;
+
+                transformed_tree_builder.upsert(entry_path, oid, entry_mode);
+            }
         }
+    }
+
+    for (transformed, entry_path, entry_mode) in pool.join() {
+        let transformed = transformed?;
+        let oid = repository.blob(transformed.as_slice())?;
+
+        transformed_tree_builder.upsert(entry_path, oid, entry_mode);
     }
 
     let transformed_tree =
