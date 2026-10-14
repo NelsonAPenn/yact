@@ -166,7 +166,7 @@ impl ShellCommandTransformer {
                             .as_ref()
                             .join(venv_path)
                             .join("Scripts")
-                            .join("python");
+                            .join("python.exe");
 
                         let mut command = Command::new(python_path);
                         command.args(["-m", "ruff"]);
