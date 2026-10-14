@@ -143,10 +143,6 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
                 continue;
             }
 
-            eprintln!(
-                "Transforming staged file: {}",
-                entry.new_file().path().unwrap().to_str().unwrap()
-            );
             let extension = entry
                 .new_file()
                 .path()
@@ -164,6 +160,10 @@ pub fn pre_commit<P: AsRef<Path>>(path: P, check_version: Option<Version>) -> Re
             // TODO: very unwrappy; ? can break out and not join pool.
 
             if let Some((transformed, entry_path, entry_mode)) = pool.submit(move || {
+                eprintln!(
+                    "Transforming staged file: {}",
+                    std::str::from_utf8(&entry_path).unwrap()
+                );
                 let result = apply_transform_pipeline(contents, transformers, extension);
                 (result, entry_path, entry_mode)
             }) {
